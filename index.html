@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AmanPay - Финансы для всех</title>
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        emerald: { 50: '#ecfdf5', 100: '#d1fae5', 500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b' },
+                        slate: { 850: '#1e293b', 950: '#020617' }
+                    },
+                    borderRadius: { '3xl': '1.5rem', '4xl': '2rem', '5xl': '3rem' }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            transition: background-color 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        
+        .dark .glass {
+            background: rgba(15, 23, 42, 0.7);
+        }
+
+        .qr-pattern {
+            background-image: radial-gradient(#000 30%, transparent 31%), radial-gradient(#000 30%, transparent 31%);
+            background-size: 8px 8px;
+            background-position: 0 0, 4px 4px;
+        }
+        
+        .dark .qr-pattern {
+            background-image: radial-gradient(#cbd5e1 30%, transparent 31%), radial-gradient(#cbd5e1 30%, transparent 31%);
+        }
+
+        .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+    <div id="root"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, onSnapshot, query, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBO9_w8ymwnX6Fje5czL0d3-bxRoa9OpT4",
+            authDomain: "amanpay-790fd.firebaseapp.com",
+            projectId: "amanpay-790fd",
+            storageBucket: "amanpay-790fd.firebasestorage.app",
+            messagingSenderId: "720784541108",
+            appId: "1:720784541108:web:fa06ff39e7ea57f5ac1ee1",
+            measurementId: "G-7V402ZDEQD"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = 'amanpay-v1';
+
+        window.amanDB = {
+            db, auth, appId,
+            collections: {
+                users: collection(db, 'artifacts', appId, 'public', 'data', 'users'),
+                txs: collection(db, 'artifacts', appId, 'public', 'data', 'transactions')
+            },
+            utils: { doc, setDoc, getDoc, getDocs, updateDoc, onSnapshot, query, addDoc, serverTimestamp, signInAnonymously, signInWithCustomToken, onAuthStateChanged }
+        };
+    </script>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const formatMoney = (sum) => new Intl.NumberFormat('ru-RU', { 
+            style: 'currency', currency: 'KGS', maximumFractionDigits: 0 
+        }).format(sum || 0);
+
+        const SvgIcon = ({ name, className = "w-6 h-6" }) => {
+            const icons = {
+                sun: <path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" />,
+                moon: <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />,
+                back: <path d="M5 12h14M5 12l6 6M5 12l6-6" />,
+                user: <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" />,
+                search: <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />,
+                logout: <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />,
+                store: <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM9 22V12h6v10" />,
+                deposit: <path d="M7 7l5 5 5-5M12 12v9" />,
+                withdraw: <path d="M7 17l5-5 5 5M12 3v9" />,
+                wallet: <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4M4 6v12c0 1.1.9 2 2 2h14v-4M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z" />,
+                shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4" />
+            };
+            return (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    {icons[name] || null}
+                </svg>
+            );
+        };
+
+        const ThemeToggle = ({ darkMode, setDarkMode }) => (
+            <button 
+                onClick={() => setDarkMode(!darkMode)}
+                className="fixed top-6 right-6 z-50 p-3 rounded-2xl bg-white dark:bg-slate-800 shadow-xl border border-slate-100 dark:border-slate-700 transition-all hover:scale-110 active:scale-90 flex items-center justify-center text-slate-800 dark:text-yellow-400"
+            >
+                <SvgIcon name={darkMode ? "sun" : "moon"} className="w-6 h-6" />
+            </button>
+        );
+
+        const QRCode = ({ value }) => (
+            <div className="bg-white p-5 rounded-3xl border-4 border-emerald-500 inline-block mb-4 relative overflow-hidden shadow-2xl">
+                <div className="w-44 h-44 bg-gray-50 qr-pattern relative flex items-center justify-center">
+                   <div className="bg-white p-4 rounded-2xl shadow-lg border border-gray-100">
+                        <span className="font-extrabold text-2xl tracking-[0.2em] text-slate-800">{value}</span>
+                   </div>
+                </div>
+            </div>
+        );
+
+        const AppLogo = ({ className }) => (
+            <div className={`flex flex-col items-center ${className}`}>
+                <div className="relative mb-6">
+                    <div className="w-32 h-32 bg-emerald-500 rounded-[2.5rem] flex items-center justify-center shadow-2xl shadow-emerald-500/40 relative z-10">
+                        <SvgIcon name="shield" className="w-16 h-16 text-white" />
+                    </div>
+                    <div className="absolute top-3 left-3 w-32 h-32 bg-emerald-200 dark:bg-emerald-900/30 rounded-[2.5rem] -z-0 rotate-6"></div>
+                </div>
+                <h1 className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter">AmanPay</h1>
+                <div className="h-1.5 w-14 bg-emerald-500 rounded-full mt-3"></div>
+            </div>
+        );
+
+        const WelcomeScreen = ({ onNavigate }) => (
+            <div className="min-h-screen flex flex-col items-center justify-between p-10 bg-white dark:bg-slate-950 text-center animate-fade-in relative overflow-hidden">
+                <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[30%] bg-emerald-500/10 rounded-full blur-[120px]"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[30%] bg-blue-500/10 rounded-full blur-[120px]"></div>
+                <div className="flex-1 flex flex-col items-center justify-center relative z-10 w-full">
+                    <AppLogo className="mb-10" />
+                    <p className="text-slate-500 dark:text-slate-400 text-lg leading-relaxed max-w-[300px] mb-14 font-medium">Управляйте финансами просто и безопасно</p>
+                    <div className="w-full max-w-xs space-y-4">
+                        <button onClick={() => onNavigate('login')} className="w-full bg-emerald-500 text-white font-bold py-5 rounded-[2rem] shadow-2xl shadow-emerald-500/30 hover:bg-emerald-600 transition-all text-xl">Войти</button>
+                        <button onClick={() => onNavigate('register')} className="w-full bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-2 border-slate-100 dark:border-slate-800 font-bold py-5 rounded-[2rem] hover:bg-slate-50 transition-all text-xl">Регистрация</button>
+                    </div>
+                </div>
+                <div className="mt-8 pb-4 relative z-10"><p className="text-slate-400 dark:text-slate-600 text-sm font-bold tracking-wide">Создатель Гафуров Ренат</p></div>
+            </div>
+        );
+
+        const RegisterScreen = ({ onRegister, onBack, isLoading }) => {
+            const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'client' });
+            return (
+                <div className="min-h-screen bg-white dark:bg-slate-950 p-8 flex flex-col animate-fade-in">
+                    <button onClick={onBack} className="self-start mb-10 p-4 bg-slate-100 dark:bg-slate-900 rounded-2xl text-slate-600 dark:text-slate-300 active:scale-90 transition-all"><SvgIcon name="back" className="w-7 h-7" /></button>
+                    <h2 className="text-5xl font-black text-slate-900 dark:text-white mb-10 tracking-tight">Регистрация</h2>
+                    <div className="space-y-5">
+                        <input type="text" placeholder="ФИО" className="w-full border-2 border-slate-50 dark:border-slate-900 p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 dark:text-white text-lg focus:border-emerald-500/50 outline-none" onChange={e => setFormData({...formData, name: e.target.value})} />
+                        <input type="email" placeholder="Email" className="w-full border-2 border-slate-50 dark:border-slate-900 p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 dark:text-white text-lg focus:border-emerald-500/50 outline-none" onChange={e => setFormData({...formData, email: e.target.value})} />
+                        <input type="password" placeholder="Пароль" className="w-full border-2 border-slate-50 dark:border-slate-900 p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 dark:text-white text-lg focus:border-emerald-500/50 outline-none" onChange={e => setFormData({...formData, password: e.target.value})} />
+                        <div className="pt-4 grid grid-cols-2 gap-4">
+                            <button onClick={() => setFormData({...formData, role: 'client'})} className={`p-6 rounded-[2.5rem] border-2 transition-all font-bold flex flex-col items-center ${formData.role === 'client' ? 'border-emerald-500 bg-emerald-500 text-white shadow-lg' : 'border-slate-50 dark:border-slate-900 bg-slate-50 dark:bg-slate-900 text-slate-400'}`}><SvgIcon name="user" className="w-8 h-8 mb-2" />Клиент</button>
+                            <button onClick={() => setFormData({...formData, role: 'agent'})} className={`p-6 rounded-[2.5rem] border-2 transition-all font-bold flex flex-col items-center ${formData.role === 'agent' ? 'border-emerald-500 bg-emerald-500 text-white shadow-lg' : 'border-slate-50 dark:border-slate-900 bg-slate-50 dark:bg-slate-900 text-slate-400'}`}><SvgIcon name="store" className="w-8 h-8 mb-2" />Агент</button>
+                        </div>
+                    </div>
+                    <button onClick={() => onRegister(formData)} disabled={isLoading} className="mt-12 w-full bg-emerald-500 text-white font-black py-6 rounded-[2rem] text-xl disabled:opacity-50">{isLoading ? 'Загрузка...' : 'Зарегистрироваться'}</button>
+                </div>
+            );
+        };
+
+        const LoginScreen = ({ onLogin, onBack, isLoading }) => {
+            const [creds, setCreds] = useState({ email: '', password: '' });
+            const [error, setError] = useState('');
+            const handleLogin = async () => {
+                if (!window.amanDB.auth.currentUser) return setError('Ожидание подключения...');
+                setError('');
+                try {
+                    const snap = await window.amanDB.utils.getDocs(window.amanDB.collections.users);
+                    const found = snap.docs.find(d => d.data().email === creds.email && d.data().password === creds.password);
+                    if (found) onLogin({ ...found.data(), fireId: found.id });
+                    else setError('Неверный логин или пароль');
+                } catch (e) { setError('Ошибка: ' + e.message); }
+            };
+            return (
+                <div className="min-h-screen bg-white dark:bg-slate-950 p-8 flex flex-col animate-fade-in">
+                    <button onClick={onBack} className="self-start mb-10 p-4 bg-slate-100 dark:bg-slate-900 rounded-2xl text-slate-600 dark:text-slate-300 active:scale-90 transition-all"><SvgIcon name="back" className="w-7 h-7" /></button>
+                    <h2 className="text-5xl font-black text-slate-900 dark:text-white mb-10">Вход</h2>
+                    <div className="space-y-5">
+                        <input type="email" placeholder="Email" className="w-full border-2 border-slate-50 dark:border-slate-900 p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 dark:text-white text-lg focus:border-emerald-500/50 outline-none" onChange={e => setCreds({...creds, email: e.target.value})} />
+                        <input type="password" placeholder="Пароль" className="w-full border-2 border-slate-50 dark:border-slate-900 p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 dark:text-white text-lg focus:border-emerald-500/50 outline-none" onChange={e => setCreds({...creds, password: e.target.value})} />
+                        {error && <div className="p-4 bg-rose-50 text-rose-600 rounded-2xl text-center font-bold">{error}</div>}
+                    </div>
+                    <button onClick={handleLogin} disabled={isLoading} className="mt-12 w-full bg-emerald-500 text-white font-black py-6 rounded-[2rem] text-xl">Войти</button>
+                </div>
+            );
+        };
+
+        const UserDashboard = ({ user, onLogout }) => {
+            const [history, setHistory] = useState([]);
+            const [balance, setBalance] = useState(user.balance);
+            useEffect(() => {
+                const { collections, utils } = window.amanDB;
+                const unsubBalance = utils.onSnapshot(utils.doc(collections.users, user.fireId), (s) => s.exists() && setBalance(s.data().balance));
+                const unsubHistory = utils.onSnapshot(collections.txs, (s) => {
+                    const txs = s.docs.map(d => d.data()).filter(t => t.userId === user.id).sort((a,b) => (b.timestamp?.seconds||0)-(a.timestamp?.seconds||0));
+                    setHistory(txs);
+                });
+                return () => { unsubBalance(); unsubHistory(); };
+            }, [user.id, user.fireId]);
+
+            return (
+                <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col pb-10 animate-fade-in">
+                    <div className="bg-emerald-600 pt-16 pb-14 px-8 text-white rounded-b-[4rem] shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-[100px]"></div>
+                        <div className="flex justify-between items-start mb-8 relative z-10">
+                            <div><p className="text-emerald-100 text-sm opacity-80 mb-2 uppercase tracking-widest">Баланс</p><h1 className="text-6xl font-black">{formatMoney(balance)}</h1></div>
+                            <button onClick={onLogout} className="bg-white/20 p-4 rounded-3xl active:scale-90 transition-all border border-white/10"><SvgIcon name="logout" className="w-7 h-7" /></button>
+                        </div>
+                        <div className="bg-black/20 p-6 rounded-[2.5rem] flex items-center relative z-10"><div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mr-5"><SvgIcon name="user" /></div><p className="font-bold text-xl">{user.name}</p></div>
+                    </div>
+                    <div className="flex-1 flex flex-col items-center -mt-10 px-8 relative z-20">
+                        <div className="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl p-10 w-full max-w-sm text-center border border-slate-100 mb-12">
+                            <p className="text-slate-400 font-black mb-6 uppercase text-xs tracking-widest">Ваш QR-код</p>
+                            <QRCode value={user.id} />
+                        </div>
+                        <div className="w-full max-w-md">
+                            <h3 className="text-3xl font-black dark:text-white mb-8 px-2">История</h3>
+                            <div className="space-y-4">
+                                {history.map((tx, idx) => (
+                                    <div key={idx} className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] flex justify-between items-center shadow-lg border border-slate-50">
+                                        <div className="flex items-center"><div className={`w-14 h-14 rounded-2xl flex items-center justify-center mr-5 ${tx.type==='deposit'?'bg-emerald-50 text-emerald-600':'bg-rose-50 text-rose-600'}`}><SvgIcon name={tx.type==='deposit'?'deposit':'withdraw'} /></div><div><p className="font-black text-lg dark:text-white">{tx.type==='deposit'?'Пополнение':'Снятие'}</p><p className="text-xs text-slate-400 font-bold uppercase">{tx.agentName}</p></div></div>
+                                        <p className={`font-black text-2xl ${tx.type==='deposit'?'text-emerald-600':'dark:text-white'}`}>{tx.type==='deposit'?'+':'-'}{formatMoney(tx.amount)}</p>
+                                    </div>
+                                ))}
+                                {history.length===0 && <p className="text-center text-slate-400 py-10">Транзакций нет</p>}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const AgentDashboard = ({ agent, onLogout }) => {
+            const [searchId, setSearchId] = useState('');
+            const [foundUser, setFoundUser] = useState(null);
+            const [amount, setAmount] = useState('');
+            const [msg, setMsg] = useState(null);
+            const [isSearching, setIsSearching] = useState(false);
+
+            const handleSearch = async () => {
+                if(searchId.length < 4) return;
+                setIsSearching(true); setMsg(null);
+                try {
+                    const snap = await window.amanDB.utils.getDocs(window.amanDB.collections.users);
+                    const u = snap.docs.find(d => d.data().id === searchId && d.data().role === 'client');
+                    if(u) setFoundUser({...u.data(), fireId: u.id});
+                    else setMsg({type:'error', text:'Клиент не найден'});
+                } catch(e) { setMsg({type:'error', text:'Ошибка поиска'}); }
+                finally { setIsSearching(false); }
+            };
+
+            const handleAction = async (type) => {
+                const val = parseInt(amount);
+                if(!val || val <= 0) return;
+                const { utils, collections } = window.amanDB;
+                if(type === 'withdraw' && foundUser.balance < val) return setMsg({type:'error', text:'Недостаточно средств'});
+                try {
+                    const newBalance = type === 'deposit' ? foundUser.balance + val : foundUser.balance - val;
+                    await utils.updateDoc(utils.doc(collections.users, foundUser.fireId), { balance: newBalance });
+                    await utils.addDoc(collections.txs, { type, amount: val, userId: foundUser.id, agentName: agent.name, timestamp: utils.serverTimestamp() });
+                    setFoundUser({...foundUser, balance: newBalance}); setMsg({type:'success', text:'Успешно!'}); setAmount('');
+                } catch(e) { setMsg({type:'error', text:'Ошибка'}); }
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col animate-fade-in">
+                    <div className="bg-slate-900 p-8 pt-16 text-white flex justify-between items-center rounded-b-[4rem] shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-[100px]"></div>
+                        <div className="relative z-10"><p className="text-emerald-400 text-[10px] font-black uppercase mb-1 tracking-widest">Агент</p><h2 className="text-4xl font-black">{agent.name}</h2></div>
+                        <button onClick={onLogout} className="bg-slate-800 p-4 rounded-3xl active:scale-90 border border-slate-700"><SvgIcon name="logout" className="w-7 h-7" /></button>
+                    </div>
+                    <div className="p-8 flex-1 max-w-md mx-auto w-full">
+                        <div className="bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-2xl mb-10 border border-slate-100 dark:border-slate-800 transition-all">
+                            <label className="text-[10px] font-black text-slate-400 mb-6 block uppercase tracking-widest">ID Клиента</label>
+                            <div className="flex items-center space-x-4">
+                                <input type="number" placeholder="0000" className="flex-1 bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800 rounded-3xl px-8 py-6 text-4xl font-black text-white outline-none focus:border-emerald-500" value={searchId} onChange={e => {setSearchId(e.target.value); if(e.target.value.length===4) setTimeout(handleSearch, 100);}} />
+                                <button onClick={handleSearch} disabled={isSearching} className="bg-emerald-500 text-white p-6 rounded-[1.5rem] shadow-xl active:scale-95 transition-all">
+                                    {isSearching ? <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div> : <SvgIcon name="search" className="w-8 h-8" />}
+                                </button>
+                            </div>
+                        </div>
+                        {msg && <div className={`p-6 rounded-[2rem] mb-10 text-center font-black animate-fade-in ${msg.type==='success'?'bg-emerald-50 text-emerald-600':'bg-rose-50 text-rose-600'}`}>{msg.text}</div>}
+                        {foundUser && (
+                            <div className="bg-white dark:bg-slate-900 rounded-[3.5rem] shadow-2xl overflow-hidden animate-fade-in border border-slate-100">
+                                <div className="bg-emerald-500 p-8 text-white"><h3 className="font-black text-3xl mb-1">{foundUser.name}</h3><p className="opacity-70">ID: {foundUser.id}</p></div>
+                                <div className="p-10 text-center">
+                                    <div className="mb-10"><p className="text-slate-400 font-bold text-xs uppercase mb-1">Баланс</p><p className="text-5xl font-black text-emerald-600">{formatMoney(foundUser.balance)}</p></div>
+                                    <input type="number" className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 rounded-[2.5rem] py-8 px-8 text-6xl font-black text-center text-white mb-10 outline-none" placeholder="0" value={amount} onChange={e => setAmount(e.target.value)} />
+                                    <div className="grid grid-cols-2 gap-5">
+                                        <button onClick={() => handleAction('deposit')} disabled={!amount} className="bg-emerald-500 text-white p-8 rounded-[2rem] font-black shadow-xl active:scale-95 flex flex-col items-center"><SvgIcon name="deposit" className="mb-3 w-10 h-10" />Принять</button>
+                                        <button onClick={() => handleAction('withdraw')} disabled={!amount} className="bg-slate-900 text-white p-8 rounded-[2rem] font-black shadow-xl active:scale-95 flex flex-col items-center border border-slate-700"><SvgIcon name="withdraw" className="mb-3 w-10 h-10" />Выдать</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [view, setView] = useState('welcome');
+            const [user, setUser] = useState(null);
+            const [darkMode, setDarkMode] = useState(false);
+            const [isLoading, setIsLoading] = useState(false);
+            const [isAuthReady, setIsAuthReady] = useState(false);
+
+            useEffect(() => {
+                const initAuth = async () => {
+                    if (!window.amanDB) return setTimeout(initAuth, 100);
+                    const { auth, utils } = window.amanDB;
+                    try {
+                        await utils.signInAnonymously(auth);
+                        utils.onAuthStateChanged(auth, (u) => setIsAuthReady(!!u));
+                    } catch (err) { console.error(err); }
+                };
+                initAuth();
+            }, []);
+
+            useEffect(() => {
+                if (darkMode) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+            }, [darkMode]);
+
+            const handleRegister = async (data) => {
+                if (!data.name || !data.email || !data.password) return;
+                setIsLoading(true);
+                try {
+                    const { setDoc, doc } = window.amanDB.utils;
+                    const userId = Math.floor(1000 + Math.random() * 9000).toString();
+                    const userDocRef = doc(window.amanDB.collections.users);
+                    const userData = { ...data, id: userId, balance: 0, fireId: userDocRef.id };
+                    await setDoc(userDocRef, userData);
+                    setUser(userData);
+                    setView(data.role === 'client' ? 'client_dash' : 'agent_dash');
+                } catch (e) { console.error(e); } finally { setIsLoading(false); }
+            };
+
+            const handleLogout = () => { setUser(null); setView('welcome'); };
+
+            if (!isAuthReady) return (
+                <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 text-emerald-500 font-bold">
+                    <div className="flex flex-col items-center">
+                        <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-6"></div>
+                        <p className="animate-pulse tracking-widest uppercase text-xs font-black">AmanPay Cloud</p>
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className="antialiased min-h-screen relative transition-colors duration-300">
+                    <ThemeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
+                    {view === 'welcome' && <WelcomeScreen onNavigate={setView} />}
+                    {view === 'register' && <RegisterScreen onBack={() => setView('welcome')} onRegister={handleRegister} isLoading={isLoading} />}
+                    {view === 'login' && <LoginScreen onBack={() => setView('welcome')} onLogin={(u) => { setUser(u); setView(u.role === 'client' ? 'client_dash' : 'agent_dash'); }} isLoading={isLoading} />}
+                    {view === 'client_dash' && user && <UserDashboard user={user} onLogout={handleLogout} />}
+                    {view === 'agent_dash' && user && <AgentDashboard agent={user} onLogout={handleLogout} />}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
