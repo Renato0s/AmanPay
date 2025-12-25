@@ -3,45 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AmanPay - Финансы для всех</title>
+    <title>AmanPay</title>
     
-    <!-- Мета-теги для превращения в полноценное мобильное приложение (PWA) -->
+    <!-- Полная мобильная интеграция -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="AmanPay">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#10b981">
     
-    <!-- Иконка для главного экрана (Зеленый щит) -->
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1067/1067239.png">
-    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/1067/1067239.png">
+    <!-- Гарантированные иконки (Зеленый щит) -->
+    <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/240/shield-with-check-mark.png">
+    <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/240/shield-with-check-mark.png">
 
-    <!-- React & ReactDOM -->
+    <!-- Подключение библиотек -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    
-    <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        emerald: { 50: '#ecfdf5', 100: '#d1fae5', 500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b' },
-                        slate: { 850: '#1e293b', 950: '#020617' }
+                        emerald: { 500: '#10b981', 600: '#059669' },
+                        slate: { 950: '#020617' }
                     },
-                    borderRadius: { '3xl': '1.5rem', '4xl': '2rem', '5xl': '3rem' }
+                    borderRadius: { '4xl': '2rem', '5xl': '3rem' }
                 }
             }
         }
     </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         
         :root {
             --sat: env(safe-area-inset-top);
@@ -50,45 +47,35 @@
 
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
-            transition: background-color 0.3s ease;
-            -webkit-tap-highlight-color: transparent;
-            overflow-x: hidden;
             padding-top: var(--sat);
             padding-bottom: var(--sab);
+            -webkit-tap-highlight-color: transparent;
             user-select: none;
+            overflow-x: hidden;
         }
         
-        .glass {
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-        }
+        .animate-pop { animation: pop 0.4s cubic-bezier(0.17, 0.89, 0.32, 1.28); }
+        @keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        input { font-size: 16px !important; } /* Предотвращает зум на iOS */
         
-        .dark .glass {
-            background: rgba(15, 23, 42, 0.75);
+        .safe-area-spacing {
+            padding-top: calc(1rem + var(--sat));
+            padding-bottom: calc(1rem + var(--sab));
         }
 
-        .qr-pattern {
-            background-image: radial-gradient(#000 30%, transparent 31%), radial-gradient(#000 30%, transparent 31%);
-            background-size: 8px 8px;
-            background-position: 0 0, 4px 4px;
-        }
-        
-        .dark .qr-pattern {
-            background-image: radial-gradient(#cbd5e1 30%, transparent 31%), radial-gradient(#cbd5e1 30%, transparent 31%);
+        .qr-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            border: 4px solid #10b981;
         }
 
-        .animate-fade-in { animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .dark .qr-card {
+            background: #0f172a;
+            border-color: #10b981;
         }
-
-        .smooth-scroll { -webkit-overflow-scrolling: touch; }
-        ::-webkit-scrollbar { width: 0px; background: transparent; }
-
-        /* Фикс для инпутов на iOS */
-        input { font-size: 16px !important; } 
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
@@ -96,7 +83,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, onSnapshot, query, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -105,8 +92,7 @@
             projectId: "amanpay-790fd",
             storageBucket: "amanpay-790fd.firebasestorage.app",
             messagingSenderId: "720784541108",
-            appId: "1:720784541108:web:fa06ff39e7ea57f5ac1ee1",
-            measurementId: "G-7V402ZDEQD"
+            appId: "1:720784541108:web:fa06ff39e7ea57f5ac1ee1"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -120,16 +106,14 @@
                 users: collection(db, 'artifacts', appId, 'public', 'data', 'users'),
                 txs: collection(db, 'artifacts', appId, 'public', 'data', 'transactions')
             },
-            utils: { doc, setDoc, getDoc, getDocs, updateDoc, onSnapshot, query, addDoc, serverTimestamp, signInAnonymously, signInWithCustomToken, onAuthStateChanged }
+            utils: { doc, setDoc, getDoc, getDocs, updateDoc, onSnapshot, query, addDoc, serverTimestamp, signInAnonymously, onAuthStateChanged }
         };
     </script>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect } = React;
 
-        const formatMoney = (sum) => new Intl.NumberFormat('ru-RU', { 
-            style: 'currency', currency: 'KGS', maximumFractionDigits: 0 
-        }).format(sum || 0);
+        const formatMoney = (sum) => new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'KGS', maximumFractionDigits: 0 }).format(sum || 0);
 
         const SvgIcon = ({ name, className = "w-6 h-6" }) => {
             const icons = {
@@ -137,161 +121,85 @@
                 moon: <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />,
                 back: <path d="M5 12h14M5 12l6 6M5 12l6-6" />,
                 user: <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" />,
-                search: <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />,
                 logout: <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />,
-                store: <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM9 22V12h6v10" />,
-                deposit: <path d="M7 7l5 5 5-5M12 12v9" />,
-                withdraw: <path d="M7 17l5-5 5 5M12 3v9" />,
-                wallet: <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4M4 6v12c0 1.1.9 2 2 2h14v-4M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z" />,
                 shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4" />
             };
-            return (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                    {icons[name] || null}
-                </svg>
-            );
+            return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>{icons[name]}</svg>;
         };
 
         const ThemeToggle = ({ darkMode, setDarkMode }) => (
-            <button 
-                onClick={() => setDarkMode(!darkMode)}
-                className="fixed top-14 right-6 z-50 p-3.5 rounded-2xl glass shadow-xl border border-white/20 dark:border-slate-700 transition-all hover:scale-110 active:scale-90 flex items-center justify-center text-slate-800 dark:text-yellow-400"
-            >
-                <SvgIcon name={darkMode ? "sun" : "moon"} className="w-6 h-6" />
+            <button onClick={() => setDarkMode(!darkMode)} className="fixed top-14 right-6 z-50 p-4 rounded-3xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg shadow-xl border border-slate-100 dark:border-slate-800 text-slate-800 dark:text-yellow-400 active:scale-90 transition-all">
+                <SvgIcon name={darkMode ? "sun" : "moon"} />
             </button>
         );
 
-        const QRCode = ({ value }) => (
-            <div className="bg-white p-5 rounded-[2.5rem] border-[6px] border-emerald-500 inline-block mb-4 relative overflow-hidden shadow-2xl">
-                <div className="w-44 h-44 bg-gray-50 qr-pattern relative flex items-center justify-center">
-                   <div className="bg-white p-4 rounded-2xl shadow-lg border border-gray-100">
-                        <span className="font-extrabold text-2xl tracking-[0.2em] text-slate-800">{value}</span>
-                   </div>
-                </div>
-            </div>
-        );
-
-        const AppLogo = ({ className }) => (
-            <div className={`flex flex-col items-center ${className} relative z-20`}>
+        const AppLogo = ({ size = "normal" }) => (
+            <div className="flex flex-col items-center animate-fade-in">
                 <div className="relative mb-6">
-                    <div className="w-32 h-32 bg-emerald-500 rounded-[3rem] flex items-center justify-center shadow-[0_20px_50px_rgba(16,185,129,0.4)] relative z-20">
-                        <svg width="68" height="68" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M9 12L11 14L15 10" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
+                    <div className={`${size === 'small' ? 'w-20 h-20' : 'w-32 h-32'} bg-emerald-500 rounded-[2.5rem] flex items-center justify-center shadow-2xl shadow-emerald-500/40 relative z-20`}>
+                        <SvgIcon name="shield" className={size === 'small' ? 'w-10 h-10 text-white' : 'w-16 h-16 text-white'} />
                     </div>
-                    <div className="absolute top-4 left-4 w-32 h-32 bg-emerald-100 dark:bg-emerald-900/40 rounded-[3rem] z-10 rotate-6"></div>
+                    <div className={`${size === 'small' ? 'w-20 h-20' : 'w-32 h-32'} absolute top-3 left-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-[2.5rem] z-10 rotate-6`}></div>
                 </div>
-                <h1 className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">AmanPay</h1>
-                <div className="h-1.5 w-16 bg-emerald-500 rounded-full mt-5 shadow-sm"></div>
+                {size !== 'small' && <h1 className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter">AmanPay</h1>}
             </div>
         );
 
         const WelcomeScreen = ({ onNavigate }) => (
-            <div className="min-h-screen flex flex-col items-center justify-between px-8 py-16 bg-white dark:bg-slate-950 text-center animate-fade-in relative overflow-hidden">
-                <div className="absolute top-[-5%] left-[-10%] w-[80%] h-[40%] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[80%] h-[40%] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none"></div>
-                <div className="flex-1 flex flex-col items-center justify-center relative z-20 w-full">
-                    <AppLogo className="mb-10" />
-                    <p className="text-slate-500 dark:text-slate-400 text-lg leading-relaxed max-w-[280px] mb-14 font-semibold px-4">Ваш надежный финансовый кошелек в одно касание</p>
-                    <div className="w-full max-w-xs space-y-5 relative z-20">
-                        <button onClick={() => onNavigate('login')} className="w-full bg-emerald-500 text-white font-black py-5 rounded-[2.5rem] shadow-2xl shadow-emerald-500/40 hover:bg-emerald-600 transition-all text-xl active:scale-95">Войти</button>
-                        <button onClick={() => onNavigate('register')} className="w-full bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-2 border-slate-100 dark:border-slate-800 font-black py-5 rounded-[2.5rem] hover:bg-slate-50 dark:hover:bg-slate-850 transition-all text-xl active:scale-95">Регистрация</button>
+            <div className="min-h-screen flex flex-col items-center justify-between p-10 bg-white dark:bg-slate-950 text-center animate-fade-in">
+                <div className="flex-1 flex flex-col items-center justify-center w-full">
+                    <AppLogo />
+                    <p className="text-slate-500 mt-8 mb-14 text-lg font-medium max-w-[260px]">Финансовая свобода <br/>в вашем смартфоне</p>
+                    <div className="w-full max-w-xs space-y-4">
+                        <button onClick={() => onNavigate('login')} className="w-full bg-emerald-500 text-white font-black py-5 rounded-[2rem] shadow-2xl shadow-emerald-500/30 text-xl active:scale-95 transition-all">Войти</button>
+                        <button onClick={() => onNavigate('register')} className="w-full bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white font-black py-5 rounded-[2rem] text-xl active:scale-95 transition-all border-2 border-transparent">Регистрация</button>
                     </div>
                 </div>
-                <div className="mt-8 relative z-20"><p className="text-slate-400 dark:text-slate-600 text-sm font-extrabold tracking-[0.2em] uppercase opacity-60">Создатель Гафуров Ренат</p></div>
+                <p className="text-slate-400 dark:text-slate-600 text-[10px] font-black uppercase tracking-widest pb-6">Создатель Гафуров Ренат</p>
             </div>
         );
 
-        const RegisterScreen = ({ onRegister, onBack, isLoading }) => {
-            const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'client' });
-            return (
-                <div className="min-h-screen bg-white dark:bg-slate-950 p-8 flex flex-col animate-fade-in">
-                    <button onClick={onBack} className="self-start mt-8 mb-10 p-4 bg-slate-100 dark:bg-slate-900 rounded-2xl text-slate-600 dark:text-slate-300 active:scale-90 transition-all"><SvgIcon name="back" className="w-7 h-7" /></button>
-                    <h2 className="text-5xl font-black text-slate-900 dark:text-white mb-10 tracking-tight leading-tight">Новый <br/>аккаунт</h2>
-                    <div className="space-y-5">
-                        <input type="text" placeholder="ФИО полностью" className="w-full border-2 border-slate-100 dark:border-slate-800 p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 dark:text-white text-lg focus:border-emerald-500/50 outline-none transition-all shadow-sm" onChange={e => setFormData({...formData, name: e.target.value})} />
-                        <input type="email" placeholder="Gmail" className="w-full border-2 border-slate-100 dark:border-slate-800 p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 dark:text-white text-lg focus:border-emerald-500/50 outline-none transition-all shadow-sm" onChange={e => setFormData({...formData, email: e.target.value})} />
-                        <input type="password" placeholder="Пароль" className="w-full border-2 border-slate-100 dark:border-slate-800 p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 dark:text-white text-lg focus:border-emerald-500/50 outline-none transition-all shadow-sm" onChange={e => setFormData({...formData, password: e.target.value})} />
-                        <div className="pt-4 grid grid-cols-2 gap-4">
-                            <button onClick={() => setFormData({...formData, role: 'client'})} className={`p-6 rounded-[2.5rem] border-2 transition-all font-black flex flex-col items-center ${formData.role === 'client' ? 'border-emerald-500 bg-emerald-500 text-white shadow-xl' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-400'}`}><SvgIcon name="user" className="w-8 h-8 mb-2" />Клиент</button>
-                            <button onClick={() => setFormData({...formData, role: 'agent'})} className={`p-6 rounded-[2.5rem] border-2 transition-all font-black flex flex-col items-center ${formData.role === 'agent' ? 'border-emerald-500 bg-emerald-500 text-white shadow-xl' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-400'}`}><SvgIcon name="store" className="w-8 h-8 mb-2" />Агент</button>
-                        </div>
-                    </div>
-                    <button onClick={() => onRegister(formData)} disabled={isLoading} className="mt-12 w-full bg-emerald-500 text-white font-black py-6 rounded-[2.5rem] text-xl disabled:opacity-50 shadow-2xl active:scale-95">{isLoading ? 'Загрузка...' : 'Зарегистрироваться'}</button>
-                </div>
-            );
-        };
-
-        const LoginScreen = ({ onLogin, onBack, isLoading }) => {
-            const [creds, setCreds] = useState({ email: '', password: '' });
-            const [error, setError] = useState('');
-            const handleLogin = async () => {
-                if (!window.amanDB.auth.currentUser) return setError('Подключение...');
-                setError('');
-                try {
-                    const snap = await window.amanDB.utils.getDocs(window.amanDB.collections.users);
-                    const found = snap.docs.find(d => d.data().email === creds.email && d.data().password === creds.password);
-                    if (found) onLogin({ ...found.data(), fireId: found.id });
-                    else setError('Данные не найдены');
-                } catch (e) { setError('Ошибка сети'); }
-            };
-            return (
-                <div className="min-h-screen bg-white dark:bg-slate-950 p-8 flex flex-col animate-fade-in">
-                    <button onClick={onBack} className="self-start mt-8 mb-10 p-4 bg-slate-100 dark:bg-slate-900 rounded-2xl text-slate-600 dark:text-slate-300 active:scale-90 transition-all"><SvgIcon name="back" className="w-7 h-7" /></button>
-                    <h2 className="text-5xl font-black text-slate-900 dark:text-white mb-12 leading-tight">С возвращением!</h2>
-                    <div className="space-y-6">
-                        <input type="email" placeholder="Email" className="w-full border-2 border-slate-100 dark:border-slate-800 p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 dark:text-white text-lg focus:border-emerald-500/50 outline-none transition-all shadow-sm" onChange={e => setCreds({...creds, email: e.target.value})} />
-                        <input type="password" placeholder="Пароль" className="w-full border-2 border-slate-100 dark:border-slate-800 p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 dark:text-white text-lg focus:border-emerald-500/50 outline-none transition-all shadow-sm" onChange={e => setCreds({...creds, password: e.target.value})} />
-                        {error && <div className="p-5 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-3xl text-center font-bold animate-fade-in">{error}</div>}
-                    </div>
-                    <button onClick={handleLogin} disabled={isLoading} className="mt-14 w-full bg-emerald-500 text-white font-black py-6 rounded-[2.5rem] text-xl shadow-2xl active:scale-95">Войти</button>
-                </div>
-            );
-        };
-
-        const UserDashboard = ({ user, onLogout }) => {
-            const [history, setHistory] = useState([]);
+        const Dashboard = ({ user, onLogout }) => {
             const [balance, setBalance] = useState(user.balance);
+            const [history, setHistory] = useState([]);
+
             useEffect(() => {
                 const { collections, utils } = window.amanDB;
-                const unsubBalance = utils.onSnapshot(utils.doc(collections.users, user.fireId), (s) => s.exists() && setBalance(s.data().balance));
-                const unsubHistory = utils.onSnapshot(collections.txs, (s) => {
-                    const txs = s.docs.map(d => d.data()).filter(t => t.userId === user.id).sort((a,b) => (b.timestamp?.seconds||0)-(a.timestamp?.seconds||0));
-                    setHistory(txs);
+                const unsub = utils.onSnapshot(utils.doc(collections.users, user.fireId), (s) => s.exists() && setBalance(s.data().balance));
+                const unsubH = utils.onSnapshot(collections.txs, (s) => {
+                    const data = s.docs.map(d => d.data()).filter(t => t.userId === user.id).sort((a,b) => b.timestamp - a.timestamp);
+                    setHistory(data);
                 });
-                return () => { unsubBalance(); unsubHistory(); };
+                return () => { unsub(); unsubH(); };
             }, [user.id, user.fireId]);
 
             return (
-                <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col pb-20 animate-fade-in smooth-scroll">
-                    <div className="bg-emerald-600 pt-24 pb-16 px-8 text-white rounded-b-[4.5rem] shadow-2xl relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-[110px] pointer-events-none"></div>
-                        <div className="flex justify-between items-start mb-10 relative z-10">
-                            <div>
-                                <p className="text-emerald-100 text-sm opacity-80 mb-2 uppercase tracking-[0.2em] font-black">Баланс</p>
-                                <h1 className="text-6xl font-black tracking-tighter drop-shadow-lg">{formatMoney(balance)}</h1>
-                            </div>
-                            <button onClick={onLogout} className="bg-white/20 p-4 rounded-3xl active:scale-90 transition-all border border-white/20 backdrop-blur-md shadow-lg"><SvgIcon name="logout" className="w-7 h-7" /></button>
+                <div className="min-h-screen bg-slate-50 dark:bg-slate-950 animate-fade-in flex flex-col">
+                    <div className="bg-emerald-600 pt-20 pb-16 px-8 rounded-b-[4rem] shadow-2xl text-white relative overflow-hidden">
+                        <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+                        <div className="flex justify-between items-start relative z-10 mb-8">
+                            <div><p className="opacity-70 text-xs font-black uppercase mb-1">Баланс</p><h1 className="text-6xl font-black">{formatMoney(balance)}</h1></div>
+                            <button onClick={onLogout} className="bg-white/20 p-4 rounded-3xl active:scale-90"><SvgIcon name="logout" /></button>
                         </div>
-                        <div className="bg-black/20 backdrop-blur-xl p-6 rounded-[2.8rem] flex items-center relative z-10 border border-white/10 shadow-xl"><div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mr-5 shadow-inner"><SvgIcon name="user" /></div><p className="font-black text-xl tracking-tight">{user.name}</p></div>
+                        <div className="bg-black/20 p-5 rounded-3xl flex items-center relative z-10 border border-white/10"><div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center mr-4"><SvgIcon name="user" className="w-6 h-6"/></div><p className="font-bold text-xl">{user.name}</p></div>
                     </div>
-                    <div className="flex-1 flex flex-col items-center -mt-12 px-6 relative z-20">
-                        <div className="bg-white dark:bg-slate-900 rounded-[3.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.1)] p-10 w-full max-w-sm text-center border border-slate-50 dark:border-slate-800 mb-14">
-                            <p className="text-slate-400 dark:text-slate-500 font-black mb-6 uppercase text-xs tracking-widest">QR-код оплаты</p>
-                            <QRCode value={user.id} />
-                            <p className="mt-6 text-slate-400 dark:text-slate-500 text-sm font-bold px-4">Покажите этот код агенту <br/>для пополнения или снятия</p>
+                    
+                    <div className="flex-1 -mt-10 px-6 flex flex-col items-center">
+                        <div className="qr-card text-center mb-10 w-full max-w-sm">
+                            <p className="text-[10px] font-black text-slate-400 uppercase mb-4 tracking-widest">ID Клиента</p>
+                            <div className="bg-slate-50 p-6 rounded-3xl inline-block mb-4 border-2 border-emerald-500/20"><span className="text-5xl font-black text-slate-900 tracking-widest">{user.id}</span></div>
+                            <p className="text-slate-400 dark:text-slate-500 text-xs font-bold px-4">Покажите этот ID агенту для совершения операции</p>
                         </div>
-                        <div className="w-full max-w-md">
-                            <div className="flex items-center justify-between mb-8 px-4"><h3 className="text-3xl font-black dark:text-white tracking-tight">Активность</h3><div className="w-10 h-1 bg-emerald-500 rounded-full"></div></div>
-                            <div className="space-y-4 px-2">
+                        
+                        <div className="w-full max-w-md pb-10">
+                            <h3 className="text-2xl font-black mb-6 dark:text-white px-2">Активность</h3>
+                            <div className="space-y-4">
                                 {history.map((tx, idx) => (
-                                    <div key={idx} className="bg-white dark:bg-slate-900 p-6 rounded-[2.8rem] flex justify-between items-center shadow-xl border border-slate-50 dark:border-slate-800 transition-all active:scale-[0.98]">
-                                        <div className="flex items-center"><div className={`w-14 h-14 rounded-[1.4rem] flex items-center justify-center mr-5 shadow-inner ${tx.type==='deposit'?'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600':'bg-rose-50 dark:bg-rose-500/10 text-rose-600'}`}><SvgIcon name={tx.type==='deposit'?'deposit':'withdraw'} className="w-7 h-7" /></div><div><p className="font-black text-lg dark:text-white leading-tight">{tx.type==='deposit'?'Приход':'Расход'}</p><p className="text-xs text-slate-400 font-black uppercase mt-1 tracking-widest">{tx.agentName}</p></div></div>
-                                        <p className={`font-black text-2xl tracking-tighter ${tx.type==='deposit'?'text-emerald-600':'text-slate-900 dark:text-slate-100'}`}>{tx.type==='deposit'?'+':'-'}{formatMoney(tx.amount)}</p>
+                                    <div key={idx} className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] flex justify-between items-center shadow-lg border border-slate-50 dark:border-slate-800 animate-fade-in" style={{animationDelay: `${idx*50}ms`}}>
+                                        <div className="flex items-center"><div className={`w-12 h-12 rounded-2xl flex items-center justify-center mr-4 ${tx.type==='deposit'?'bg-emerald-50 text-emerald-600':'bg-rose-50 text-rose-600'}`}><SvgIcon name="shield" className="w-6 h-6" /></div><div><p className="font-black dark:text-white text-lg">{tx.type==='deposit'?'Приход':'Расход'}</p><p className="text-[10px] text-slate-400 font-bold uppercase">{tx.agentName}</p></div></div>
+                                        <p className={`font-black text-xl ${tx.type==='deposit'?'text-emerald-600':'dark:text-white'}`}>{tx.type==='deposit'?'+':'-'}{formatMoney(tx.amount)}</p>
                                     </div>
                                 ))}
-                                {history.length===0 && <div className="text-center py-20 px-10 bg-white/40 dark:bg-slate-900/40 rounded-[3.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800 text-slate-400 font-black">Нет операций</div>}
                             </div>
                         </div>
                     </div>
@@ -299,89 +207,61 @@
             );
         };
 
-        const AgentDashboard = ({ agent, onLogout }) => {
+        const AgentPanel = ({ agent, onLogout }) => {
             const [searchId, setSearchId] = useState('');
-            const [foundUser, setFoundUser] = useState(null);
+            const [user, setUser] = useState(null);
             const [amount, setAmount] = useState('');
             const [msg, setMsg] = useState(null);
-            const [isSearching, setIsSearching] = useState(false);
 
             const handleSearch = async () => {
                 if(searchId.length < 4) return;
-                setIsSearching(true); setMsg(null);
-                try {
-                    const snap = await window.amanDB.utils.getDocs(window.amanDB.collections.users);
-                    const u = snap.docs.find(d => d.data().id === searchId && d.data().role === 'client');
-                    if(u) setFoundUser({...u.data(), fireId: u.id});
-                    else setMsg({type:'error', text:'Клиент не найден'});
-                } catch(e) { setMsg({type:'error', text:'Ошибка доступа'}); }
-                finally { setIsSearching(false); }
+                const { collections, utils } = window.amanDB;
+                const snap = await utils.getDocs(collections.users);
+                const found = snap.docs.find(d => d.data().id === searchId && d.data().role === 'client');
+                if(found) setUser({...found.data(), fireId: found.id});
+                else setMsg({type:'error', text:'ID не найден'});
             };
 
-            const handleAction = async (type) => {
-                const val = parseInt(amount);
-                if(!val || val <= 0) return;
+            const handleOp = async (type) => {
+                const val = parseInt(amount); if(!val) return;
                 const { utils, collections } = window.amanDB;
-                if(type === 'withdraw' && foundUser.balance < val) return setMsg({type:'error', text:'Лимит превышен'});
-                try {
-                    const newBalance = type === 'deposit' ? foundUser.balance + val : foundUser.balance - val;
-                    await utils.updateDoc(utils.doc(collections.users, foundUser.fireId), { balance: newBalance });
-                    await utils.addDoc(collections.txs, { type, amount: val, userId: foundUser.id, agentName: agent.name, timestamp: utils.serverTimestamp() });
-                    setFoundUser({...foundUser, balance: newBalance}); setMsg({type:'success', text:'Выполнено!'}); setAmount('');
-                } catch(e) { setMsg({type:'error', text:'Сбой'}); }
+                if(type === 'withdraw' && user.balance < val) return setMsg({type:'error', text:'Мало средств'});
+                const newB = type === 'deposit' ? user.balance + val : user.balance - val;
+                await utils.updateDoc(utils.doc(collections.users, user.fireId), { balance: newB });
+                await utils.addDoc(collections.txs, { type, amount: val, userId: user.id, agentName: agent.name, timestamp: Date.now() });
+                setUser({...user, balance: newB}); setMsg({type:'success', text:'Готово!'}); setAmount('');
             };
 
             return (
-                <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col animate-fade-in smooth-scroll">
-                    <div className="bg-slate-900 p-8 pt-24 text-white flex justify-between items-center rounded-b-[4.5rem] shadow-2xl relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none"></div>
-                        <div className="relative z-10"><p className="text-emerald-400 text-[10px] font-black uppercase mb-1 tracking-[0.2em] opacity-80">Точка обслуживания</p><h2 className="text-4xl font-black tracking-tight">{agent.name}</h2></div>
-                        <button onClick={onLogout} className="bg-slate-800 p-4 rounded-3xl active:scale-90 border border-slate-700 shadow-lg"><SvgIcon name="logout" className="w-7 h-7" /></button>
+                <div className="min-h-screen bg-slate-900 text-white animate-fade-in flex flex-col">
+                    <div className="p-10 pt-20 flex justify-between items-center">
+                        <div><p className="text-emerald-400 text-[10px] font-black uppercase mb-1">Агент</p><h2 className="text-4xl font-black">{agent.name}</h2></div>
+                        <button onClick={onLogout} className="bg-slate-800 p-4 rounded-3xl"><SvgIcon name="logout"/></button>
                     </div>
-                    <div className="p-6 flex-1 max-w-md mx-auto w-full">
-                        {/* КОМПАКТНОЕ ПОЛЕ ПОИСКА ID */}
-                        <div className="bg-white dark:bg-slate-900 p-8 rounded-[3.5rem] shadow-2xl mb-10 border border-slate-50 dark:border-slate-800 flex flex-col items-center">
-                            <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 mb-6 block uppercase tracking-widest text-center">Введите 4-значный ID клиента</label>
-                            <div className="flex items-center justify-center space-x-4 w-full max-w-[280px]">
-                                <input 
-                                    type="number" 
-                                    inputmode="numeric"
-                                    pattern="\d*"
-                                    placeholder="0000" 
-                                    className="w-32 bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800 rounded-3xl py-4 text-center text-3xl font-black text-slate-900 dark:text-white outline-none focus:border-emerald-500 transition-all placeholder:opacity-10" 
-                                    value={searchId} 
-                                    maxLength="4"
-                                    onChange={e => {
-                                        const val = e.target.value.slice(0, 4);
-                                        setSearchId(val); 
-                                        if(val.length === 4) {
-                                            setFoundUser(null);
-                                            setTimeout(handleSearch, 100);
-                                        }
-                                    }} 
-                                />
-                                <button onClick={handleSearch} disabled={isSearching} className="bg-emerald-500 text-white p-5 rounded-2xl shadow-xl active:scale-95 transition-all">
-                                    {isSearching ? <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div> : <SvgIcon name="search" className="w-7 h-7" />}
-                                </button>
+                    
+                    <div className="px-8 flex-1 flex flex-col items-center">
+                        {/* КОМПАКТНЫЙ ПОИСК */}
+                        <div className="bg-slate-800 p-8 rounded-[3rem] w-full max-w-[320px] mb-8 border border-slate-700 shadow-2xl text-center">
+                            <p className="text-[10px] font-black text-slate-500 uppercase mb-6 tracking-widest">Поиск клиента</p>
+                            <div className="flex items-center justify-center space-x-3">
+                                <input type="number" inputmode="numeric" placeholder="0000" className="w-32 bg-slate-950 border-2 border-slate-700 rounded-2xl py-4 text-center text-4xl font-black outline-none focus:border-emerald-500 transition-all" value={searchId} onChange={e => {setSearchId(e.target.value.slice(0,4)); if(e.target.value.length === 4) setTimeout(handleSearch, 100);}} />
+                                <button onClick={handleSearch} className="bg-emerald-500 p-5 rounded-2xl shadow-xl active:scale-90"><SvgIcon name="user" className="w-8 h-8"/></button>
                             </div>
                         </div>
 
-                        {msg && <div className={`p-6 rounded-[2.5rem] mb-10 text-center font-black animate-fade-in shadow-2xl ${msg.type==='success'?'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20':'bg-rose-50 text-rose-600 dark:bg-rose-900/20'}`}>{msg.text}</div>}
-                        
-                        {foundUser && (
-                            <div className="bg-white dark:bg-slate-900 rounded-[4rem] shadow-2xl overflow-hidden animate-fade-in border border-slate-100 dark:border-slate-800">
-                                <div className="bg-emerald-500 p-10 text-white relative shadow-lg"><div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div><h3 className="font-black text-4xl mb-2 relative z-10">{foundUser.name}</h3><p className="opacity-90 font-black relative z-10 uppercase tracking-[0.2em] text-[10px]">ID КЛИЕНТА: {foundUser.id}</p></div>
-                                <div className="p-10 text-center">
-                                    <div className="mb-10 text-left bg-slate-50 dark:bg-slate-950/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-800"><p className="text-slate-400 font-black text-xs uppercase mb-1 tracking-widest">Текущий счет</p><p className="text-5xl font-black text-emerald-600 tracking-tighter">{formatMoney(foundUser.balance)}</p></div>
-                                    <div className="relative mb-10"><p className="text-[10px] font-black text-slate-400 dark:text-slate-500 mb-4 uppercase tracking-[0.2em] text-left ml-4">Сумма операции</p><input type="number" inputmode="numeric" className="w-full bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800 rounded-[2.8rem] py-10 px-8 text-7xl font-black text-center text-slate-900 dark:text-white outline-none focus:border-emerald-500 transition-all placeholder:opacity-5" placeholder="0" value={amount} onChange={e => setAmount(e.target.value)} /></div>
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <button onClick={() => handleAction('deposit')} disabled={!amount} className="bg-emerald-500 text-white p-9 rounded-[2.5rem] font-black shadow-[0_20px_40px_rgba(16,185,129,0.3)] active:scale-95 flex flex-col items-center disabled:opacity-30"><SvgIcon name="deposit" className="mb-3 w-12 h-12" />Принять</button>
-                                        <button onClick={() => handleAction('withdraw')} disabled={!amount} className="bg-slate-900 text-white p-9 rounded-[2.5rem] font-black shadow-2xl active:scale-95 flex flex-col items-center border border-slate-700 disabled:opacity-30"><SvgIcon name="withdraw" className="mb-3 w-12 h-12" />Выдать</button>
-                                    </div>
+                        {msg && <div className={`p-5 rounded-3xl mb-8 w-full max-w-[320px] text-center font-bold animate-pop ${msg.type==='success'?'bg-emerald-500/20 text-emerald-400':'bg-rose-500/20 text-rose-400'}`}>{msg.text}</div>}
+
+                        {user && (
+                            <div className="bg-white text-slate-900 rounded-[4rem] p-10 w-full max-w-[360px] animate-pop shadow-2xl">
+                                <h3 className="text-3xl font-black mb-1">{user.name}</h3>
+                                <p className="text-slate-400 font-bold text-xs uppercase mb-8">Баланс: {formatMoney(user.balance)}</p>
+                                <input type="number" inputmode="numeric" placeholder="Сумма" className="w-full bg-slate-50 border-2 border-slate-100 rounded-3xl py-8 px-6 text-6xl font-black text-center mb-8 outline-none focus:border-emerald-500" value={amount} onChange={e => setAmount(e.target.value)} />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <button onClick={() => handleOp('deposit')} className="bg-emerald-500 text-white p-8 rounded-[2rem] font-black flex flex-col items-center active:scale-95"><SvgIcon name="shield" className="mb-2"/>Принять</button>
+                                    <button onClick={() => handleOp('withdraw')} className="bg-slate-900 text-white p-8 rounded-[2rem] font-black flex flex-col items-center active:scale-95"><SvgIcon name="logout" className="rotate-90 mb-2"/>Выдать</button>
                                 </div>
                             </div>
                         )}
-                        {!foundUser && !isSearching && <div className="p-20 text-center rounded-[4rem] border-4 border-dashed border-slate-200 dark:border-slate-800 opacity-30 mt-4 animate-fade-in"><SvgIcon name="user" className="w-14 h-14 mx-auto mb-6" /><p className="font-black text-lg tracking-tight leading-tight">Ожидание сканирования <br/>ID клиента...</p></div>}
                     </div>
                 </div>
             );
@@ -391,59 +271,74 @@
             const [view, setView] = useState('welcome');
             const [user, setUser] = useState(null);
             const [darkMode, setDarkMode] = useState(false);
-            const [isLoading, setIsLoading] = useState(false);
-            const [isAuthReady, setIsAuthReady] = useState(false);
+            const [isAuth, setIsAuth] = useState(false);
 
             useEffect(() => {
-                const initAuth = async () => {
-                    if (!window.amanDB) return setTimeout(initAuth, 100);
+                const init = async () => {
+                    if(!window.amanDB) return setTimeout(init, 100);
                     const { auth, utils } = window.amanDB;
-                    try {
-                        await utils.signInAnonymously(auth);
-                        utils.onAuthStateChanged(auth, (u) => setIsAuthReady(!!u));
-                    } catch (err) { console.error(err); }
+                    await utils.signInAnonymously(auth);
+                    utils.onAuthStateChanged(auth, (u) => setIsAuth(!!u));
                 };
-                initAuth();
+                init();
             }, []);
 
-            useEffect(() => {
-                if (darkMode) document.documentElement.classList.add('dark');
-                else document.documentElement.classList.remove('dark');
-            }, [darkMode]);
-
-            const handleRegister = async (data) => {
-                if (!data.name || !data.email || !data.password) return;
-                setIsLoading(true);
-                try {
-                    const { setDoc, doc } = window.amanDB.utils;
-                    const userId = Math.floor(1000 + Math.random() * 9000).toString();
-                    const userDocRef = doc(window.amanDB.collections.users);
-                    const userData = { ...data, id: userId, balance: 0, fireId: userDocRef.id };
-                    await setDoc(userDocRef, userData);
-                    setUser(userData);
-                    setView(data.role === 'client' ? 'client_dash' : 'agent_dash');
-                } catch (e) { console.error(e); } finally { setIsLoading(false); }
-            };
-
-            const handleLogout = () => { setUser(null); setView('welcome'); };
-
-            if (!isAuthReady) return (
-                <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 text-emerald-500 font-bold">
-                    <div className="flex flex-col items-center">
-                        <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-8 shadow-2xl"></div>
-                        <p className="animate-pulse tracking-[0.4em] uppercase text-[10px] font-black opacity-60">Защищенное соединение</p>
-                    </div>
-                </div>
-            );
+            if(!isAuth) return <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center"><div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div></div>;
 
             return (
-                <div className="antialiased min-h-screen relative transition-colors duration-500">
+                <div className={darkMode ? 'dark' : ''}>
                     <ThemeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
                     {view === 'welcome' && <WelcomeScreen onNavigate={setView} />}
-                    {view === 'register' && <RegisterScreen onBack={() => setView('welcome')} onRegister={handleRegister} isLoading={isLoading} />}
-                    {view === 'login' && <LoginScreen onBack={() => setView('welcome')} onLogin={(u) => { setUser(u); setView(u.role === 'client' ? 'client_dash' : 'agent_dash'); }} isLoading={isLoading} />}
-                    {view === 'client_dash' && user && <UserDashboard user={user} onLogout={handleLogout} />}
-                    {view === 'agent_dash' && user && <AgentDashboard agent={user} onLogout={handleLogout} />}
+                    {view === 'register' && <div className="animate-fade-in"><button onClick={() => setView('welcome')} className="fixed top-14 left-6 z-50 p-4 rounded-3xl bg-slate-100 dark:bg-slate-900 active:scale-90"><SvgIcon name="back"/></button><Register onComplete={(u) => {setUser(u); setView(u.role==='client'?'dash':'agent');}} /></div>}
+                    {view === 'login' && <div className="animate-fade-in"><button onClick={() => setView('welcome')} className="fixed top-14 left-6 z-50 p-4 rounded-3xl bg-slate-100 dark:bg-slate-900 active:scale-90"><SvgIcon name="back"/></button><Login onComplete={(u) => {setUser(u); setView(u.role==='client'?'dash':'agent');}} /></div>}
+                    {view === 'dash' && <Dashboard user={user} onLogout={() => setView('welcome')} />}
+                    {view === 'agent' && <AgentPanel agent={user} onLogout={() => setView('welcome')} />}
+                </div>
+            );
+        };
+
+        const Register = ({ onComplete }) => {
+            const [f, setF] = useState({ name: '', email: '', password: '', role: 'client' });
+            const h = async () => {
+                const { setDoc, doc } = window.amanDB.utils;
+                const id = Math.floor(1000 + Math.random() * 9000).toString();
+                const ref = doc(window.amanDB.collections.users);
+                const u = { ...f, id, balance: 0, fireId: ref.id };
+                await setDoc(ref, u);
+                onComplete(u);
+            };
+            return (
+                <div className="min-h-screen p-8 pt-40 bg-white dark:bg-slate-950">
+                    <h2 className="text-5xl font-black dark:text-white mb-10">Регистрация</h2>
+                    <div className="space-y-4">
+                        <input placeholder="ФИО" className="w-full p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-emerald-500 dark:text-white outline-none" onChange={e => setF({...f, name: e.target.value})} />
+                        <input placeholder="Email" className="w-full p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-emerald-500 dark:text-white outline-none" onChange={e => setF({...f, email: e.target.value})} />
+                        <input placeholder="Пароль" type="password" className="w-full p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-emerald-500 dark:text-white outline-none" onChange={e => setF({...f, password: e.target.value})} />
+                        <div className="grid grid-cols-2 gap-4 pt-4">
+                            <button onClick={() => setF({...f, role:'client'})} className={`p-6 rounded-[2rem] font-black ${f.role==='client'?'bg-emerald-500 text-white':'bg-slate-100 dark:bg-slate-900 dark:text-white'}`}>Клиент</button>
+                            <button onClick={() => setF({...f, role:'agent'})} className={`p-6 rounded-[2rem] font-black ${f.role==='agent'?'bg-emerald-500 text-white':'bg-slate-100 dark:bg-slate-900 dark:text-white'}`}>Агент</button>
+                        </div>
+                    </div>
+                    <button onClick={h} className="w-full mt-10 bg-emerald-500 text-white py-6 rounded-[2rem] font-black text-xl shadow-2xl">Создать</button>
+                </div>
+            );
+        };
+
+        const Login = ({ onComplete }) => {
+            const [f, setF] = useState({ email: '', password: '' });
+            const h = async () => {
+                const snap = await window.amanDB.utils.getDocs(window.amanDB.collections.users);
+                const found = snap.docs.find(d => d.data().email === f.email && d.data().password === f.password);
+                if(found) onComplete({...found.data(), fireId: found.id});
+            };
+            return (
+                <div className="min-h-screen p-8 pt-40 bg-white dark:bg-slate-950">
+                    <h2 className="text-5xl font-black dark:text-white mb-10">Вход</h2>
+                    <div className="space-y-4">
+                        <input placeholder="Email" className="w-full p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 dark:text-white outline-none" onChange={e => setF({...f, email: e.target.value})} />
+                        <input placeholder="Пароль" type="password" className="w-full p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 dark:text-white outline-none" onChange={e => setF({...f, password: e.target.value})} />
+                    </div>
+                    <button onClick={h} className="w-full mt-10 bg-emerald-500 text-white py-6 rounded-[2rem] font-black text-xl shadow-2xl">Войти</button>
                 </div>
             );
         };
