@@ -5,14 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>AmanPay Premium</title>
     
-    <!-- PWA Настройки -->
+    <!-- PWA Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="AmanPay">
-    <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#10b981">
     
-    <!-- Иконки -->
+    <!-- Web App Manifest (Embedded as Data URL for single-file deployment) -->
+    <link rel="manifest" href='data:application/manifest+json,{"name":"AmanPay Premium","short_name":"AmanPay","start_url":".","display":"standalone","background_color":"#f8fafc","theme_color":"#10b981","icons":[{"src":"https://img.icons8.com/fluency/240/shield-with-check-mark.png","sizes":"240x240","type":"image/png"}]}'>
+
+    <!-- Иконки для Apple устройств -->
     <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/240/shield-with-check-mark.png">
     <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/240/shield-with-check-mark.png">
 
@@ -95,7 +98,7 @@
 
         ::-webkit-scrollbar { width: 0px; background: transparent; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        input { font-size: 16px !important; } /* Фикс зума на iOS */
+        input { font-size: 16px !important; }
     </style>
 </head>
 <body class="transition-colors duration-500">
