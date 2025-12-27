@@ -60,52 +60,42 @@
         .animate-float { animation: float 6s ease-in-out infinite; }
         @keyframes float { 
             0%, 100% { transform: translateY(0px); } 
-            50% { transform: translateY(-10px); } 
+            50% { transform: translateY(-8px); } 
         }
 
-        .animate-enter { animation: enter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-enter { animation: enter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes enter { 
-            from { opacity: 0; transform: translateY(20px) scale(0.98); } 
+            from { opacity: 0; transform: translateY(15px) scale(0.98); } 
             to { opacity: 1; transform: translateY(0) scale(1); } 
         }
 
         .mesh-gradient {
-            background: radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.15) 0px, transparent 50%),
-                        radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.15) 0px, transparent 50%);
+            background: radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.12) 0px, transparent 50%),
+                        radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.12) 0px, transparent 50%);
         }
 
         .premium-card {
             background: linear-gradient(135deg, #10b981 0%, #064e3b 100%);
-            box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 15px 35px -5px rgba(16, 185, 129, 0.35);
             position: relative;
             overflow: hidden;
         }
 
-        .premium-card::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            pointer-events: none;
-        }
-
         .glass-ui {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.4);
         }
 
         .dark .glass-ui {
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(15, 23, 42, 0.7);
             border-color: rgba(255, 255, 255, 0.05);
         }
 
         ::-webkit-scrollbar { width: 0px; background: transparent; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input { font-size: 16px !important; } /* Фикс зума на iOS */
     </style>
 </head>
 <body class="transition-colors duration-500">
@@ -141,13 +131,12 @@
     </script>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo, useRef } = React;
+        const { useState, useEffect, useRef } = React;
 
         const formatMoney = (sum) => new Intl.NumberFormat('ru-RU', { 
             style: 'currency', currency: 'KGS', maximumFractionDigits: 0 
         }).format(sum || 0);
 
-        // --- Система синтеза звуков ---
         const playSound = (type) => {
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -198,39 +187,39 @@
         };
 
         const ThemeToggle = ({ darkMode, setDarkMode }) => (
-            <button onClick={() => setDarkMode(!darkMode)} className="fixed top-14 right-6 z-50 p-4 rounded-3xl glass-ui shadow-2xl text-slate-800 dark:text-yellow-400 active:scale-90 transition-all duration-300">
-                <SvgIcon name={darkMode ? "sun" : "moon"} />
+            <button onClick={() => setDarkMode(!darkMode)} className="fixed top-12 right-6 z-50 p-3 rounded-2xl glass-ui shadow-xl text-slate-800 dark:text-yellow-400 active:scale-90 transition-all duration-300">
+                <SvgIcon name={darkMode ? "sun" : "moon"} className="w-5 h-5" />
             </button>
         );
 
         const AppLogo = ({ size = "normal" }) => (
             <div className="flex flex-col items-center animate-enter">
-                <div className="relative mb-6">
-                    <div className={`${size === 'small' ? 'w-20 h-20' : 'w-32 h-32 animate-float'} bg-emerald-500 rounded-[2.8rem] flex items-center justify-center shadow-2xl shadow-emerald-500/40 relative z-20`}>
-                        <SvgIcon name="shield" className={size === 'small' ? 'w-10 h-10 text-white' : 'w-16 h-16 text-white'} />
+                <div className="relative mb-4">
+                    <div className={`${size === 'small' ? 'w-16 h-16' : 'w-24 h-24 animate-float'} bg-emerald-500 rounded-[2rem] flex items-center justify-center shadow-2xl shadow-emerald-500/30 relative z-20`}>
+                        <SvgIcon name="shield" className={size === 'small' ? 'w-8 h-8 text-white' : 'w-12 h-12 text-white'} />
                     </div>
-                    <div className={`${size === 'small' ? 'w-20 h-20' : 'w-32 h-32'} absolute top-4 left-4 bg-emerald-100 dark:bg-emerald-900/30 rounded-[2.8rem] z-10 rotate-12`}></div>
+                    <div className={`${size === 'small' ? 'w-16 h-16' : 'w-24 h-24'} absolute top-3 left-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-[2rem] z-10 rotate-12`}></div>
                 </div>
-                {size !== 'small' && <h1 className="text-6xl font-extrabold text-slate-900 dark:text-white tracking-tighter">AmanPay</h1>}
+                {size !== 'small' && <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tighter">AmanPay</h1>}
             </div>
         );
 
         const WelcomeScreen = ({ onNavigate }) => (
-            <div className="min-h-screen flex flex-col items-center justify-between p-10 bg-slate-50 dark:bg-slate-950 mesh-gradient animate-enter">
+            <div className="min-h-screen flex flex-col items-center justify-between p-8 bg-slate-50 dark:bg-slate-950 mesh-gradient animate-enter">
                 <div className="flex-1 flex flex-col items-center justify-center w-full">
                     <AppLogo />
-                    <p className="text-slate-500 dark:text-slate-400 mt-10 mb-16 text-xl font-semibold max-w-[280px] text-center leading-relaxed">Безопасность и простота <br/>в каждом переводе</p>
-                    <div className="w-full max-w-xs space-y-5">
-                        <button onClick={() => onNavigate('login')} className="w-full bg-emerald-500 text-white font-extrabold py-6 rounded-[2.2rem] shadow-2xl shadow-emerald-500/40 text-xl active:scale-95 transition-all">Войти</button>
-                        <button onClick={() => onNavigate('register')} className="w-full bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-extrabold py-6 rounded-[2.2rem] text-xl active:scale-95 transition-all shadow-lg border border-slate-100 dark:border-slate-800">Регистрация</button>
-                        <button onClick={() => onNavigate('instructions')} className="w-full flex items-center justify-center space-x-3 text-emerald-600 dark:text-emerald-400 font-bold py-4 active:scale-95 transition-all">
-                            <SvgIcon name="help" className="w-5 h-5" />
-                            <span>Как это работает?</span>
+                    <p className="text-slate-500 dark:text-slate-400 mt-6 mb-12 text-lg font-semibold max-w-[240px] text-center leading-snug">Безопасность и простота <br/>в каждом переводе</p>
+                    <div className="w-full max-w-xs space-y-4">
+                        <button onClick={() => onNavigate('login')} className="w-full bg-emerald-500 text-white font-extrabold py-5 rounded-3xl shadow-xl shadow-emerald-500/30 text-lg active:scale-95 transition-all">Войти</button>
+                        <button onClick={() => onNavigate('register')} className="w-full bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-extrabold py-5 rounded-3xl text-lg active:scale-95 transition-all shadow-md border border-slate-100 dark:border-slate-800">Регистрация</button>
+                        <button onClick={() => onNavigate('instructions')} className="w-full flex items-center justify-center space-x-2 text-emerald-600 dark:text-emerald-400 font-bold py-2 active:scale-95 transition-all">
+                            <SvgIcon name="help" className="w-4 h-4" />
+                            <span className="text-sm">Как это работает?</span>
                         </button>
                     </div>
                 </div>
-                <div className="pb-4">
-                    <p className="text-slate-400 dark:text-slate-600 text-xs font-black uppercase tracking-[0.3em] opacity-60">Gafurov Renat Production</p>
+                <div className="pb-2">
+                    <p className="text-slate-400 dark:text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Gafurov Renat Production</p>
                 </div>
             </div>
         );
@@ -239,34 +228,34 @@
             const [role, setRole] = useState('client');
             const steps = {
                 client: [
-                    { title: "Регистрация", text: "Создайте аккаунт, выбрав роль «Клиент». Это займет меньше минуты." },
-                    { title: "Ваш ID", text: "В личном кабинете вы увидите уникальный 4-значный номер. Это ваш адрес для переводов." },
-                    { title: "Пополнение", text: "Найдите ближайшего агента AmanPay и назовите ему свой ID для внесения наличных." },
-                    { title: "История", text: "Все ваши операции мгновенно отображаются в ленте активности под балансом." }
+                    { title: "Регистрация", text: "Создайте аккаунт как «Клиент»." },
+                    { title: "Ваш ID", text: "Найдите свой 4-значный ID в кабинете." },
+                    { title: "Пополнение", text: "Назовите ID агенту для внесения наличных." },
+                    { title: "История", text: "Следите за балансом в реальном времени." }
                 ],
                 agent: [
-                    { title: "Роль Агента", text: "При регистрации выберите «Агент». Вам откроется терминал обслуживания." },
-                    { title: "Поиск Клиента", text: "Введите 4-значный ID клиента. Система сразу найдет его профиль и текущий баланс." },
-                    { title: "Транзакции", text: "Введите сумму и выберите «Принять» (пополнение) или «Выдать» (снятие наличных)." },
-                    { title: "Безопасность", text: "Все изменения баланса происходят мгновенно и защищены облаком AmanPay." }
+                    { title: "Роль Агента", text: "Выберите «Агент» при регистрации." },
+                    { title: "Поиск", text: "Введите 4-значный ID клиента." },
+                    { title: "Транзакции", text: "Принимайте или выдавайте наличные." },
+                    { title: "Облако", text: "Все данные мгновенно синхронизируются." }
                 ]
             };
             return (
-                <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-8 pt-20 animate-enter flex flex-col smooth-scroll">
-                    <button onClick={onBack} className="fixed top-14 left-6 z-50 p-4 rounded-3xl glass-ui active:scale-90 shadow-lg text-slate-800 dark:text-white"><SvgIcon name="back" /></button>
-                    <h2 className="text-5xl font-black dark:text-white mb-8 tracking-tight">Инструкция</h2>
-                    <div className="flex p-2 bg-slate-200/50 dark:bg-slate-900 rounded-[2rem] mb-10">
-                        <button onClick={() => setRole('client')} className={`flex-1 py-4 rounded-[1.5rem] font-bold transition-all ${role === 'client' ? 'bg-white dark:bg-slate-800 text-emerald-600 shadow-md' : 'text-slate-500'}`}>Клиенту</button>
-                        <button onClick={() => setRole('agent')} className={`flex-1 py-4 rounded-[1.5rem] font-bold transition-all ${role === 'agent' ? 'bg-white dark:bg-slate-800 text-emerald-600 shadow-md' : 'text-slate-500'}`}>Агенту</button>
+                <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6 pt-20 animate-enter flex flex-col smooth-scroll">
+                    <button onClick={onBack} className="fixed top-12 left-6 z-50 p-3 rounded-2xl glass-ui active:scale-90 shadow-md text-slate-800 dark:text-white"><SvgIcon name="back" className="w-5 h-5"/></button>
+                    <h2 className="text-4xl font-black dark:text-white mb-6 tracking-tight">Инструкция</h2>
+                    <div className="flex p-1.5 bg-slate-200/50 dark:bg-slate-900 rounded-2xl mb-8">
+                        <button onClick={() => setRole('client')} className={`flex-1 py-3 rounded-xl font-bold transition-all text-sm ${role === 'client' ? 'bg-white dark:bg-slate-800 text-emerald-600 shadow-sm' : 'text-slate-500'}`}>Клиенту</button>
+                        <button onClick={() => setRole('agent')} className={`flex-1 py-3 rounded-xl font-bold transition-all text-sm ${role === 'agent' ? 'bg-white dark:bg-slate-800 text-emerald-600 shadow-sm' : 'text-slate-500'}`}>Агенту</button>
                     </div>
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                         {steps[role].map((step, idx) => (
-                            <div key={idx} className="glass-ui p-8 rounded-[2.5rem] border border-white/50 dark:border-white/5 animate-enter" style={{animationDelay: `${idx * 100}ms`}}>
-                                <div className="flex items-center space-x-4 mb-3">
-                                    <div className="w-10 h-10 bg-emerald-500 rounded-2xl flex items-center justify-center text-white font-black">{idx + 1}</div>
-                                    <h4 className="text-xl font-extrabold dark:text-white tracking-tight">{step.title}</h4>
+                            <div key={idx} className="glass-ui p-6 rounded-3xl border border-white/50 animate-enter" style={{animationDelay: `${idx * 80}ms`}}>
+                                <div className="flex items-center space-x-3 mb-2">
+                                    <div className="w-8 h-8 bg-emerald-500 rounded-xl flex items-center justify-center text-white font-black text-xs">{idx + 1}</div>
+                                    <h4 className="text-lg font-extrabold dark:text-white tracking-tight">{step.title}</h4>
                                 </div>
-                                <p className="text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{step.text}</p>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{step.text}</p>
                             </div>
                         ))}
                     </div>
@@ -286,8 +275,7 @@
                 const unsubH = utils.onSnapshot(collections.txs, (s) => {
                     const data = s.docs.map(d => ({...d.data(), id: d.id})).filter(t => t.userId === user.id).sort((a,b) => b.timestamp - a.timestamp);
                     if (!isFirstLoad.current && data.length > prevTxsCount.current) {
-                        const newTx = data[0];
-                        playSound(newTx.type === 'deposit' ? 'receive' : 'send');
+                        playSound(data[0].type === 'deposit' ? 'receive' : 'send');
                     }
                     setHistory(data);
                     prevTxsCount.current = data.length;
@@ -298,35 +286,37 @@
 
             return (
                 <div className="min-h-screen bg-slate-50 dark:bg-slate-950 animate-enter flex flex-col smooth-scroll">
-                    <div className="px-6 pt-20 pb-16">
-                        <div className="premium-card p-8 rounded-[3.5rem] text-white flex flex-col justify-between h-64 relative">
+                    <div className="px-5 pt-16 pb-12">
+                        <div className="premium-card p-6 rounded-[2.5rem] text-white flex flex-col justify-between h-56 relative">
                             <div className="flex justify-between items-start relative z-10">
-                                <div><p className="opacity-80 text-[10px] font-black uppercase tracking-widest mb-1">Ваш баланс</p><h1 className="text-5xl font-black tracking-tight">{formatMoney(balance)}</h1></div>
-                                <button onClick={onLogout} className="bg-white/20 backdrop-blur-md p-4 rounded-3xl active:scale-90 border border-white/20"><SvgIcon name="logout" /></button>
+                                <div><p className="opacity-70 text-[9px] font-black uppercase tracking-widest mb-0.5">Баланс</p><h1 className="text-4xl font-black tracking-tight">{formatMoney(balance)}</h1></div>
+                                <button onClick={onLogout} className="bg-white/20 backdrop-blur-md p-3 rounded-2xl active:scale-90"><SvgIcon name="logout" className="w-5 h-5"/></button>
                             </div>
                             <div className="flex justify-between items-end relative z-10">
-                                <div><p className="text-xs font-bold opacity-70 mb-1 uppercase">Держатель</p><p className="text-xl font-black">{user.name}</p></div>
-                                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10"><SvgIcon name="wallet" /></div>
+                                <div><p className="text-[10px] font-bold opacity-60 mb-0.5 uppercase">Держатель</p><p className="text-lg font-black">{user.name}</p></div>
+                                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center border border-white/10"><SvgIcon name="wallet" className="w-5 h-5"/></div>
                             </div>
                         </div>
                     </div>
-                    <div className="flex-1 px-6 space-y-10">
-                        <div className="glass-ui p-10 rounded-[3rem] text-center shadow-xl flex flex-col items-center">
-                            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-6 tracking-widest">Персональный ID</p>
-                            <div className="bg-emerald-500/5 dark:bg-emerald-500/10 p-8 rounded-[2.5rem] border-2 border-emerald-500/20 mb-6 group transition-all"><span className="text-6xl font-black text-emerald-600 dark:text-emerald-400 tracking-[0.15em]">{user.id}</span></div>
-                            <p className="text-slate-400 dark:text-slate-500 text-sm font-semibold px-4">Для совершения операций назовите <br/>эти цифры агенту</p>
+                    <div className="flex-1 px-5 space-y-8">
+                        <div className="glass-ui p-8 rounded-[2rem] text-center shadow-lg flex flex-col items-center">
+                            <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase mb-4 tracking-widest">Персональный ID</p>
+                            <div className="bg-emerald-500/5 dark:bg-emerald-500/10 px-6 py-4 rounded-2xl border-2 border-emerald-500/10 mb-4"><span className="text-5xl font-black text-emerald-600 dark:text-emerald-400 tracking-[0.1em]">{user.id}</span></div>
+                            <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold px-2 leading-relaxed">Назовите эти цифры агенту <br/>для внесения или снятия</p>
                         </div>
-                        <div className="pb-10 px-2 space-y-4">
-                           <h3 className="text-3xl font-black dark:text-white tracking-tight">Активность</h3>
-                           {history.map((tx, idx) => (
-                               <div key={tx.id || idx} className="glass-ui p-6 rounded-[2.5rem] flex justify-between items-center shadow-md animate-enter">
-                                   <div className="flex items-center">
-                                       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mr-5 ${tx.type==='deposit'?'bg-emerald-100 text-emerald-600':'bg-rose-100 text-rose-600'}`}><SvgIcon name={tx.type==='deposit' ? 'wallet' : 'logout'} className={tx.type==='withdraw' ? 'rotate-90' : ''} /></div>
-                                       <div><p className="font-black dark:text-white text-xl leading-tight">{tx.type==='deposit'?'Приход':'Выдача'}</p><p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">{tx.agentName}</p></div>
+                        <div className="pb-8 px-1">
+                           <h3 className="text-2xl font-black dark:text-white tracking-tight mb-6">Активность</h3>
+                           <div className="space-y-3">
+                               {history.map((tx, idx) => (
+                                   <div key={tx.id || idx} className="glass-ui p-4 rounded-2xl flex justify-between items-center shadow-sm animate-enter">
+                                       <div className="flex items-center">
+                                           <div className={`w-11 h-11 rounded-xl flex items-center justify-center mr-4 ${tx.type==='deposit'?'bg-emerald-100 text-emerald-600':'bg-rose-100 text-rose-600'}`}><SvgIcon name={tx.type==='deposit' ? 'wallet' : 'logout'} className={`w-5 h-5 ${tx.type==='withdraw' ? 'rotate-90' : ''}`} /></div>
+                                           <div><p className="font-black dark:text-white text-base leading-tight">{tx.type==='deposit'?'Приход':'Выдача'}</p><p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">{tx.agentName}</p></div>
+                                       </div>
+                                       <p className={`font-black text-lg tracking-tighter ${tx.type==='deposit'?'text-emerald-600':'dark:text-white'}`}>{tx.type==='deposit'?'+':'-'}{formatMoney(tx.amount)}</p>
                                    </div>
-                                   <div className="text-right"><p className={`font-black text-2xl tracking-tighter ${tx.type==='deposit'?'text-emerald-600':'dark:text-white'}`}>{tx.type==='deposit'?'+':'-'}{formatMoney(tx.amount)}</p></div>
-                               </div>
-                           ))}
+                               ))}
+                           </div>
                         </div>
                     </div>
                 </div>
@@ -343,8 +333,7 @@
             const handleSearch = async () => {
                 if(searchId.length < 4) return;
                 setIsSearching(true); setMsg(null);
-                const { collections, utils } = window.amanDB;
-                const snap = await utils.getDocs(collections.users);
+                const snap = await window.amanDB.utils.getDocs(window.amanDB.collections.users);
                 const found = snap.docs.find(d => d.data().id === searchId && d.data().role === 'client');
                 if(found) setFoundUser({...found.data(), fireId: found.id});
                 else setMsg({type:'error', text:'Клиент не найден'});
@@ -354,47 +343,46 @@
             const handleOp = async (type) => {
                 const val = parseInt(amount); if(!val) return;
                 const { utils, collections } = window.amanDB;
-                if(type === 'withdraw' && foundUser.balance < val) return setMsg({type:'error', text:'Лимит счета превышен'});
+                if(type === 'withdraw' && foundUser.balance < val) return setMsg({type:'error', text:'Недостаточно средств'});
                 try {
                     const newB = type === 'deposit' ? foundUser.balance + val : foundUser.balance - val;
                     await utils.updateDoc(utils.doc(collections.users, foundUser.fireId), { balance: newB });
                     await utils.addDoc(collections.txs, { type, amount: val, userId: foundUser.id, agentName: agent.name, timestamp: Date.now() });
                     playSound(type === 'deposit' ? 'receive' : 'send');
                     setFoundUser({...foundUser, balance: newB}); 
-                    setMsg({type:'success', text:'Операция подтверждена'}); 
+                    setMsg({type:'success', text:'Успешно'}); 
                     setAmount('');
-                } catch(e) { setMsg({type:'error', text:'Ошибка транзакции'}); }
+                } catch(e) { setMsg({type:'error', text:'Ошибка'}); }
             };
 
             return (
                 <div className="min-h-screen bg-slate-900 text-white animate-enter flex flex-col">
-                    <div className="p-10 pt-20 flex justify-between items-center bg-slate-950/50 rounded-b-[4rem] shadow-xl">
-                        <div><p className="text-emerald-400 text-[10px] font-black uppercase mb-1 tracking-widest">Точка обслуживания</p><h2 className="text-4xl font-black">{agent.name}</h2></div>
-                        <button onClick={onLogout} className="bg-slate-800 p-4 rounded-3xl active:scale-90 border border-slate-700 shadow-lg"><SvgIcon name="logout"/></button>
+                    <div className="p-8 pt-16 flex justify-between items-center bg-slate-950/40 rounded-b-[3rem]">
+                        <div><p className="text-emerald-400 text-[9px] font-black uppercase mb-0.5 tracking-widest">Агент</p><h2 className="text-2xl font-black leading-tight">{agent.name}</h2></div>
+                        <button onClick={onLogout} className="bg-slate-800 p-3 rounded-2xl active:scale-90 border border-slate-700 shadow-md"><SvgIcon name="logout" className="w-5 h-5"/></button>
                     </div>
-                    <div className="px-8 flex-1 flex flex-col items-center pt-10">
-                        <div className="bg-slate-800/50 p-10 rounded-[3.5rem] w-full max-w-[340px] mb-12 border border-slate-700 shadow-2xl text-center backdrop-blur-md">
-                            <p className="text-[10px] font-black text-slate-500 uppercase mb-8 tracking-widest">Поиск по ID клиента</p>
-                            <div className="flex items-center justify-center space-x-4">
-                                <input type="number" inputMode="numeric" placeholder="0000" className="w-40 bg-slate-950 border-2 border-slate-700 rounded-3xl py-6 text-center text-5xl font-black outline-none focus:border-emerald-500 transition-all shadow-inner" value={searchId} onChange={e => {
+                    <div className="px-6 flex-1 flex flex-col items-center pt-8">
+                        <div className="bg-slate-800/40 p-8 rounded-[2.5rem] w-full max-w-[320px] mb-8 border border-slate-700 shadow-xl text-center backdrop-blur-md">
+                            <p className="text-[9px] font-black text-slate-500 uppercase mb-6 tracking-widest">ID Клиента</p>
+                            <div className="flex items-center justify-center space-x-3">
+                                <input type="number" inputMode="numeric" placeholder="0000" className="w-32 bg-slate-950 border-2 border-slate-700 rounded-2xl py-4 text-center text-4xl font-black outline-none focus:border-emerald-500 transition-all shadow-inner" value={searchId} onChange={e => {
                                     const v = e.target.value.slice(0,4);
                                     setSearchId(v);
                                     if(v.length === 4) { setFoundUser(null); setTimeout(handleSearch, 100); }
                                 }} />
-                                <button onClick={handleSearch} className="bg-emerald-500 p-6 rounded-3xl shadow-xl active:scale-90 flex items-center justify-center">{isSearching ? <div className="w-8 h-8 border-4 border-white/20 border-t-white rounded-full animate-spin"></div> : <SvgIcon name="search" className="w-8 h-8"/>}</button>
+                                <button onClick={handleSearch} className="bg-emerald-500 p-4 rounded-xl shadow-lg active:scale-90">{isSearching ? <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <SvgIcon name="search" className="w-6 h-6"/>}</button>
                             </div>
                         </div>
-                        {msg && <div className={`p-6 rounded-3xl mb-10 w-full max-w-[340px] text-center font-black animate-enter shadow-2xl ${msg.type==='success'?'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20':'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>{msg.text}</div>}
+                        {msg && <div className={`p-4 rounded-2xl mb-6 w-full max-w-[320px] text-center font-black text-sm animate-enter ${msg.type==='success'?'bg-emerald-500/10 text-emerald-400':'bg-rose-500/10 text-rose-400'}`}>{msg.text}</div>}
                         {foundUser && (
-                            <div className="bg-white text-slate-900 rounded-[4rem] p-10 w-full max-w-[380px] animate-enter shadow-2xl relative overflow-hidden">
-                                <h3 className="text-4xl font-black mb-1 tracking-tight">{foundUser.name}</h3>
-                                <p className="text-slate-400 font-extrabold text-[10px] uppercase mb-10 tracking-[0.2em]">Клиент ID: {foundUser.id}</p>
-                                <div className="bg-slate-50 p-8 rounded-[2.5rem] mb-10 border border-slate-100"><p className="text-slate-400 font-bold text-xs uppercase mb-1">Доступно</p><p className="text-5xl font-black text-emerald-600 tracking-tighter">{formatMoney(foundUser.balance)}</p></div>
-                                <div className="space-y-8">
-                                    <input type="number" inputMode="numeric" placeholder="Сумма" className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2.5rem] py-10 px-8 text-7xl font-black text-center outline-none focus:border-emerald-500 shadow-inner" value={amount} onChange={e => setAmount(e.target.value)} />
-                                    <div className="grid grid-cols-2 gap-5">
-                                        <button onClick={() => handleOp('deposit')} className="bg-emerald-500 text-white p-10 rounded-[2.5rem] font-black flex flex-col items-center active:scale-95"><SvgIcon name="wallet" className="mb-3 w-10 h-10"/>Пополнить</button>
-                                        <button onClick={() => handleOp('withdraw')} className="bg-slate-900 text-white p-10 rounded-[2.5rem] font-black flex flex-col items-center active:scale-95"><SvgIcon name="logout" className="rotate-90 mb-3 w-10 h-10"/>Выдать</button>
+                            <div className="bg-white text-slate-900 rounded-[2.5rem] p-8 w-full max-w-[360px] animate-enter shadow-xl relative">
+                                <h3 className="text-2xl font-black mb-1 tracking-tight leading-tight">{foundUser.name}</h3>
+                                <p className="text-slate-400 font-extrabold text-[9px] uppercase mb-6 tracking-widest">Баланс: {formatMoney(foundUser.balance)}</p>
+                                <div className="space-y-6">
+                                    <input type="number" inputMode="numeric" placeholder="Сумма" className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-6 px-4 text-5xl font-black text-center outline-none focus:border-emerald-500 shadow-inner" value={amount} onChange={e => setAmount(e.target.value)} />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <button onClick={() => handleOp('deposit')} className="bg-emerald-500 text-white p-6 rounded-2xl font-black flex flex-col items-center shadow-lg active:scale-95 text-sm transition-all"><SvgIcon name="wallet" className="mb-2 w-7 h-7"/>Принять</button>
+                                        <button onClick={() => handleOp('withdraw')} className="bg-slate-900 text-white p-6 rounded-2xl font-black flex flex-col items-center shadow-lg active:scale-95 text-sm transition-all"><SvgIcon name="logout" className="rotate-90 mb-2 w-7 h-7"/>Выдать</button>
                                     </div>
                                 </div>
                             </div>
@@ -422,12 +410,10 @@
 
             const handleAuthResult = (u) => {
                 setUser(u);
-                if (u.role === 'client') setView('dash');
-                else if (u.role === 'agent') setView('agent');
-                else setView('welcome');
+                setView(u.role === 'client' ? 'dash' : 'agent');
             };
 
-            if(!isAuth) return <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center"><div className="w-20 h-20 border-8 border-emerald-500 border-t-transparent rounded-full animate-spin"></div></div>;
+            if(!isAuth) return <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center"><div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div></div>;
 
             return (
                 <div className={darkMode ? 'dark' : ''}>
@@ -435,8 +421,8 @@
                         <ThemeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
                         {view === 'welcome' && <WelcomeScreen onNavigate={setView} />}
                         {view === 'instructions' && <InstructionsScreen onBack={() => setView('welcome')} />}
-                        {view === 'register' && <div className="animate-enter"><button onClick={() => setView('welcome')} className="fixed top-14 left-6 z-50 p-4 rounded-3xl glass-ui active:scale-90"><SvgIcon name="back" className="dark:text-white"/></button><Register onComplete={handleAuthResult} /></div>}
-                        {view === 'login' && <div className="animate-enter"><button onClick={() => setView('welcome')} className="fixed top-14 left-6 z-50 p-4 rounded-3xl glass-ui active:scale-90"><SvgIcon name="back" className="dark:text-white"/></button><Login onComplete={handleAuthResult} /></div>}
+                        {view === 'register' && <div className="animate-enter"><button onClick={() => setView('welcome')} className="fixed top-12 left-6 z-50 p-3 rounded-2xl glass-ui active:scale-90"><SvgIcon name="back" className="w-5 h-5 dark:text-white"/></button><Register onComplete={handleAuthResult} /></div>}
+                        {view === 'login' && <div className="animate-enter"><button onClick={() => setView('welcome')} className="fixed top-12 left-6 z-50 p-3 rounded-2xl glass-ui active:scale-90"><SvgIcon name="back" className="w-5 h-5 dark:text-white"/></button><Login onComplete={handleAuthResult} /></div>}
                         {view === 'dash' && user && <Dashboard user={user} onLogout={() => setView('welcome')} />}
                         {view === 'agent' && user && <AgentPanel agent={user} onLogout={() => setView('welcome')} />}
                     </div>
@@ -448,44 +434,36 @@
             const [f, setF] = useState({ name: '', email: '', password: '', role: 'client' });
             const [loading, setLoading] = useState(false);
             const [error, setError] = useState('');
-
             const h = async () => {
                 if(!f.name || !f.email || !f.password) return;
-                setLoading(true);
-                setError('');
-                const { setDoc, doc, getDocs, collections } = window.amanDB.utils;
-                
+                setLoading(true); setError('');
+                const { setDoc, doc, getDocs } = window.amanDB.utils;
                 try {
-                    // Проверка уникальности Email
                     const snap = await getDocs(window.amanDB.collections.users);
-                    const exists = snap.docs.some(d => d.data().email === f.email);
-                    if (exists) {
-                        setError('Пользователь с такой почтой уже существует');
-                        setLoading(false);
-                        return;
+                    if (snap.docs.some(d => d.data().email === f.email)) {
+                        setError('Email уже занят'); setLoading(false); return;
                     }
-
                     const id = Math.floor(1000 + Math.random() * 9000).toString();
                     const ref = doc(window.amanDB.collections.users);
                     const u = { ...f, id, balance: 0, fireId: ref.id };
                     await setDoc(ref, u);
                     onComplete(u);
-                } catch(e) { setError('Ошибка регистрации'); setLoading(false); }
+                } catch(e) { setError('Ошибка'); setLoading(false); }
             };
             return (
-                <div className="min-h-screen p-8 pt-44">
-                    <h2 className="text-6xl font-black dark:text-white mb-10 tracking-tight">Регистрация</h2>
+                <div className="min-h-screen p-8 pt-36 max-w-sm mx-auto">
+                    <h2 className="text-4xl font-black dark:text-white mb-8 tracking-tight">Регистрация</h2>
                     <div className="space-y-4">
-                        <input placeholder="Ваше Имя" className="w-full p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 focus:border-emerald-500 dark:text-white outline-none" onChange={e => setF({...f, name: e.target.value})} />
-                        <input placeholder="Email" type="email" className="w-full p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 focus:border-emerald-500 dark:text-white outline-none" onChange={e => setF({...f, email: e.target.value})} />
-                        <input placeholder="Пароль" type="password" className="w-full p-6 rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 focus:border-emerald-500 dark:text-white outline-none" onChange={e => setF({...f, password: e.target.value})} />
-                        {error && <p className="text-rose-500 font-bold px-2">{error}</p>}
-                        <div className="grid grid-cols-2 gap-4 pt-4">
-                            <button onClick={() => setF({...f, role:'client'})} className={`p-6 rounded-[2rem] font-black ${f.role==='client'?'bg-emerald-500 text-white shadow-xl':'bg-white dark:bg-slate-900 dark:text-white border-2 border-slate-100 dark:border-slate-800'}`}>Клиент</button>
-                            <button onClick={() => setF({...f, role:'agent'})} className={`p-6 rounded-[2rem] font-black ${f.role==='agent'?'bg-emerald-500 text-white shadow-xl':'bg-white dark:bg-slate-900 dark:text-white border-2 border-slate-100 dark:border-slate-800'}`}>Агент</button>
+                        <input placeholder="Имя" className="w-full p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 focus:border-emerald-500 dark:text-white outline-none" onChange={e => setF({...f, name: e.target.value})} />
+                        <input placeholder="Email" type="email" className="w-full p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 focus:border-emerald-500 dark:text-white outline-none" onChange={e => setF({...f, email: e.target.value})} />
+                        <input placeholder="Пароль" type="password" className="w-full p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 focus:border-emerald-500 dark:text-white outline-none" onChange={e => setF({...f, password: e.target.value})} />
+                        {error && <p className="text-rose-500 font-bold text-sm px-1">{error}</p>}
+                        <div className="grid grid-cols-2 gap-3 pt-2">
+                            <button onClick={() => setF({...f, role:'client'})} className={`py-4 rounded-2xl font-black text-sm ${f.role==='client'?'bg-emerald-500 text-white shadow-lg':'bg-white dark:bg-slate-900 dark:text-white border-2 border-slate-100 dark:border-slate-800'}`}>Клиент</button>
+                            <button onClick={() => setF({...f, role:'agent'})} className={`py-4 rounded-2xl font-black text-sm ${f.role==='agent'?'bg-emerald-500 text-white shadow-lg':'bg-white dark:bg-slate-900 dark:text-white border-2 border-slate-100 dark:border-slate-800'}`}>Агент</button>
                         </div>
                     </div>
-                    <button onClick={h} disabled={loading} className="w-full mt-10 bg-emerald-500 text-white py-6 rounded-[2rem] font-black text-xl shadow-2xl active:scale-95">{loading ? 'Создание...' : 'Завершить'}</button>
+                    <button onClick={h} disabled={loading} className="w-full mt-8 bg-emerald-500 text-white py-5 rounded-2xl font-black text-lg shadow-xl active:scale-95">{loading ? 'Создание...' : 'Завершить'}</button>
                 </div>
             );
         };
@@ -494,29 +472,23 @@
             const [f, setF] = useState({ email: '', password: '' });
             const [error, setError] = useState('');
             const [loading, setLoading] = useState(false);
-
             const h = async () => {
                 if(!f.email || !f.password) return;
-                setLoading(true);
-                setError('');
+                setLoading(true); setError('');
                 const snap = await window.amanDB.utils.getDocs(window.amanDB.collections.users);
                 const found = snap.docs.find(d => d.data().email === f.email && d.data().password === f.password);
-                if(found) {
-                    onComplete({...found.data(), fireId: found.id});
-                } else {
-                    setError('Неверная почта или пароль');
-                    setLoading(false);
-                }
+                if(found) onComplete({...found.data(), fireId: found.id});
+                else { setError('Неверные данные'); setLoading(false); }
             };
             return (
-                <div className="min-h-screen p-8 pt-44">
-                    <h2 className="text-6xl font-black dark:text-white mb-10 tracking-tight">Вход</h2>
+                <div className="min-h-screen p-8 pt-36 max-w-sm mx-auto">
+                    <h2 className="text-4xl font-black dark:text-white mb-8 tracking-tight">Вход</h2>
                     <div className="space-y-4">
-                        <input placeholder="Email" type="email" className="w-full p-6 rounded-3xl bg-white dark:bg-slate-900 dark:text-white outline-none border-2 border-slate-100 dark:border-slate-800 focus:border-emerald-500 shadow-sm" onChange={e => setF({...f, email: e.target.value})} />
-                        <input placeholder="Пароль" type="password" className="w-full p-6 rounded-3xl bg-white dark:bg-slate-900 dark:text-white outline-none border-2 border-slate-100 dark:border-slate-800 focus:border-emerald-500 shadow-sm" onChange={e => setF({...f, password: e.target.value})} />
-                        {error && <p className="text-rose-500 font-bold px-2">{error}</p>}
+                        <input placeholder="Email" type="email" className="w-full p-5 rounded-2xl bg-white dark:bg-slate-900 dark:text-white outline-none border-2 border-slate-100 dark:border-slate-800 focus:border-emerald-500" onChange={e => setF({...f, email: e.target.value})} />
+                        <input placeholder="Пароль" type="password" className="w-full p-5 rounded-2xl bg-white dark:bg-slate-900 dark:text-white outline-none border-2 border-slate-100 dark:border-slate-800 focus:border-emerald-500" onChange={e => setF({...f, password: e.target.value})} />
+                        {error && <p className="text-rose-500 font-bold text-sm px-1">{error}</p>}
                     </div>
-                    <button onClick={h} disabled={loading} className="w-full mt-10 bg-emerald-500 text-white py-6 rounded-[2rem] font-black text-xl shadow-2xl active:scale-95">{loading ? 'Вход...' : 'Войти'}</button>
+                    <button onClick={h} disabled={loading} className="w-full mt-8 bg-emerald-500 text-white py-5 rounded-2xl font-black text-lg shadow-xl active:scale-95">{loading ? 'Вход...' : 'Войти'}</button>
                 </div>
             );
         };
