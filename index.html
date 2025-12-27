@@ -12,14 +12,14 @@
     <meta name="apple-mobile-web-app-title" content="AmanPay">
     <meta name="theme-color" content="#10b981">
     
-    <!-- Link to manifest -->
+    <!-- Ссылка на манифест -->
     <link rel="manifest" href="/manifest.json">
 
-    <!-- Icons -->
+    <!-- Иконки -->
     <link rel="apple-touch-icon" href="/icon-192.png">
     <link rel="icon" type="image/png" href="/icon-192.png">
 
-    <!-- Libraries -->
+    <!-- Библиотеки -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -104,7 +104,7 @@
 <body class="transition-colors duration-500">
     <div id="root"></div>
 
-    <!-- Service Worker Registration to force standalone mode -->
+    <!-- Регистрация Service Worker для работы PWA в режиме standalone -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -384,7 +384,7 @@
                         <div className="bg-slate-800/40 p-8 rounded-[2.5rem] w-full max-w-[320px] mb-8 border border-slate-700 shadow-xl text-center backdrop-blur-md">
                             <p className="text-[9px] font-black text-slate-500 uppercase mb-6 tracking-widest">ID Клиента</p>
                             <div className="flex items-center justify-center space-x-3">
-                                <input type="number" inputMode="numeric" placeholder="0000" className="w-32 bg-slate-950 border-2 border-slate-700 rounded-3xl py-6 text-center text-5xl font-black outline-none focus:border-emerald-500 transition-all shadow-inner" value={searchId} onChange={e => {
+                                <input type="number" inputMode="numeric" placeholder="0000" className="w-32 bg-slate-950 border-2 border-slate-700 rounded-2xl py-4 text-center text-4xl font-black outline-none focus:border-emerald-500 transition-all shadow-inner" value={searchId} onChange={e => {
                                     const v = e.target.value.slice(0,4);
                                     setSearchId(v);
                                     if(v.length === 4) { setFoundUser(null); setTimeout(handleSearch, 100); }
