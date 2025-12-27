@@ -12,10 +12,10 @@
     <meta name="apple-mobile-web-app-title" content="AmanPay">
     <meta name="theme-color" content="#10b981">
     
-    <!-- Подключение манифеста -->
+    <!-- Подключение внешнего манифеста -->
     <link rel="manifest" href="/manifest.json">
 
-    <!-- Иконки (Убедитесь, что файлы существуют в корне проекта) -->
+    <!-- Иконки -->
     <link rel="apple-touch-icon" href="/icon-192.png">
     <link rel="icon" type="image/png" href="/icon-192.png">
 
@@ -104,34 +104,26 @@
 <body class="transition-colors duration-500">
     <div id="root"></div>
 
-    <!-- Улучшенная регистрация Service Worker -->
+    <!-- Регистрация Service Worker -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                const swCode = `
-                    const CACHE_NAME = 'amanpay-v1';
-                    self.addEventListener('install', e => self.skipWaiting());
-                    self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
-                    self.addEventListener('fetch', e => {
-                        // Для соответствия критериям установки PWA должен быть обработчик fetch
-                        e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('PWA Service Worker зарегистрирован'))
+                    .catch(err => {
+                        console.warn('Регистрация SW не удалась в данной среде.');
                     });
-                `;
-                const blob = new Blob([swCode], { type: 'text/javascript' });
-                const url = URL.createObjectURL(blob);
-                navigator.serviceWorker.register(url)
-                    .then(reg => console.log('PWA Ready'))
-                    .catch(err => console.log('PWA Init Error', err));
             });
         }
     </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, onSnapshot, query, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
+        // Попытка использовать системную конфигурацию, если она доступна
+        const defaultCfg = {
             apiKey: "AIzaSyBO9_w8ymwnX6Fje5czL0d3-bxRoa9OpT4",
             authDomain: "amanpay-790fd.firebaseapp.com",
             projectId: "amanpay-790fd",
@@ -139,11 +131,12 @@
             messagingSenderId: "720784541108",
             appId: "1:720784541108:web:fa06ff39e7ea57f5ac1ee1"
         };
-
+        
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : defaultCfg;
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = 'amanpay-v1';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'amanpay-v1';
 
         window.amanDB = {
             db, auth, appId,
@@ -151,7 +144,7 @@
                 users: collection(db, 'artifacts', appId, 'public', 'data', 'users'),
                 txs: collection(db, 'artifacts', appId, 'public', 'data', 'transactions')
             },
-            utils: { doc, setDoc, getDoc, getDocs, updateDoc, onSnapshot, query, addDoc, serverTimestamp, signInAnonymously, onAuthStateChanged }
+            utils: { doc, setDoc, getDoc, getDocs, updateDoc, onSnapshot, query, addDoc, serverTimestamp, signInAnonymously, onAuthStateChanged, signInWithCustomToken, collection }
         };
     </script>
 
@@ -189,7 +182,7 @@
                 gain.connect(ctx.destination);
                 osc.start();
                 osc.stop(ctx.currentTime + 0.6);
-            } catch (e) { console.warn("Sound blocked"); }
+            } catch (e) { console.warn("Звук заблокирован"); }
         };
 
         const SvgIcon = ({ name, className = "w-6 h-6" }) => {
@@ -223,12 +216,28 @@
                 const init = async () => {
                     if(!window.amanDB) return setTimeout(init, 100);
                     const { auth, utils } = window.amanDB;
-                    await utils.signInAnonymously(auth);
-                    utils.onAuthStateChanged(auth, (u) => setIsAuth(!!u));
+                    
+                    const initAuth = async () => {
+                        const token = (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) ? __initial_auth_token : null;
+                        try {
+                            if (token) {
+                                await utils.signInWithCustomToken(auth, token);
+                            } else {
+                                await utils.signInAnonymously(auth);
+                            }
+                        } catch (e) {
+                            // Ошибка mismatch перехватывается здесь и происходит анонимный вход
+                            await utils.signInAnonymously(auth);
+                        }
+                    };
+                    
+                    await initAuth();
+                    utils.onAuthStateChanged(auth, (u) => {
+                        setIsAuth(!!u);
+                    });
                 };
                 init();
 
-                // Логика перехвата события установки
                 window.addEventListener('beforeinstallprompt', (e) => {
                     e.preventDefault();
                     setDeferredPrompt(e);
@@ -253,11 +262,11 @@
             return (
                 <div className={darkMode ? 'dark' : ''}>
                     <div className="bg-slate-50 dark:bg-slate-950 min-h-screen">
-                        {/* Кнопка ручной установки (появляется если браузер разрешил установку) */}
+                        
                         {deferredPrompt && (
-                            <button onClick={handleInstall} className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-emerald-500 text-white px-6 py-3 rounded-full shadow-2xl flex items-center space-x-2 font-bold animate-bounce">
-                                <SvgIcon name="install" className="w-5 h-5" />
-                                <span>Установить приложение</span>
+                            <button onClick={handleInstall} className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[60] bg-emerald-500 text-white px-8 py-4 rounded-full shadow-2xl flex items-center space-x-3 font-black animate-bounce ring-4 ring-emerald-500/20 active:scale-95 transition-all">
+                                <SvgIcon name="install" className="w-6 h-6" />
+                                <span>Установить AmanPay</span>
                             </button>
                         )}
 
@@ -343,9 +352,14 @@
             const isFirstLoad = useRef(true);
 
             useEffect(() => {
-                const { collections, utils } = window.amanDB;
-                const unsub = utils.onSnapshot(utils.doc(collections.users, user.fireId), (s) => s.exists() && setBalance(s.data().balance));
-                const unsubH = utils.onSnapshot(collections.txs, (s) => {
+                const { utils, db, appId, collections } = window.amanDB;
+                if (!user) return;
+
+                const userRef = utils.doc(db, 'artifacts', appId, 'public', 'data', 'users', user.fireId);
+                const unsub = utils.onSnapshot(userRef, (s) => s.exists() && setBalance(s.data().balance), (err) => console.error(err));
+
+                const q = utils.query(collections.txs);
+                const unsubH = utils.onSnapshot(q, (s) => {
                     const data = s.docs.map(d => ({...d.data(), id: d.id})).filter(t => t.userId === user.id).sort((a,b) => b.timestamp - a.timestamp);
                     if (!isFirstLoad.current && data.length > prevTxsCount.current) {
                         playSound(data[0].type === 'deposit' ? 'receive' : 'send');
@@ -353,9 +367,10 @@
                     setHistory(data);
                     prevTxsCount.current = data.length;
                     isFirstLoad.current = false;
-                });
+                }, (err) => console.error(err));
+
                 return () => { unsub(); unsubH(); };
-            }, [user.id, user.fireId]);
+            }, [user]);
 
             return (
                 <div className="min-h-screen bg-slate-50 dark:bg-slate-950 animate-enter flex flex-col smooth-scroll pb-20">
@@ -380,7 +395,7 @@
                         <div className="pb-8 px-1">
                            <h3 className="text-2xl font-black dark:text-white tracking-tight mb-6">Активность</h3>
                            <div className="space-y-3">
-                               {history.map((tx, idx) => (
+                               {history.length > 0 ? history.map((tx, idx) => (
                                    <div key={tx.id || idx} className="glass-ui p-4 rounded-2xl flex justify-between items-center shadow-sm animate-enter">
                                        <div className="flex items-center">
                                            <div className={`w-11 h-11 rounded-xl flex items-center justify-center mr-4 ${tx.type==='deposit'?'bg-emerald-100 text-emerald-600':'bg-rose-100 text-rose-600'}`}><SvgIcon name={tx.type==='deposit' ? 'wallet' : 'logout'} className={`w-5 h-5 ${tx.type==='withdraw' ? 'rotate-90' : ''}`} /></div>
@@ -388,7 +403,7 @@
                                        </div>
                                        <p className={`font-black text-lg tracking-tighter ${tx.type==='deposit'?'text-emerald-600':'dark:text-white'}`}>{tx.type==='deposit'?'+':'-'}{formatMoney(tx.amount)}</p>
                                    </div>
-                               ))}
+                               )) : <p className="text-slate-400 text-center py-10 font-bold">История пуста</p>}
                            </div>
                         </div>
                     </div>
@@ -406,7 +421,8 @@
             const handleSearch = async () => {
                 if(searchId.length < 4) return;
                 setIsSearching(true); setMsg(null);
-                const snap = await window.amanDB.utils.getDocs(window.amanDB.collections.users);
+                const { collections, utils } = window.amanDB;
+                const snap = await utils.getDocs(collections.users);
                 const found = snap.docs.find(d => d.data().id === searchId && d.data().role === 'client');
                 if(found) setFoundUser({...found.data(), fireId: found.id});
                 else setMsg({type:'error', text:'Клиент не найден'});
@@ -415,12 +431,16 @@
 
             const handleOp = async (type) => {
                 const val = parseInt(amount); if(!val) return;
-                const { utils, collections } = window.amanDB;
+                const { utils, db, appId } = window.amanDB;
                 if(type === 'withdraw' && foundUser.balance < val) return setMsg({type:'error', text:'Недостаточно средств'});
                 try {
                     const newB = type === 'deposit' ? foundUser.balance + val : foundUser.balance - val;
-                    await utils.updateDoc(utils.doc(collections.users, foundUser.fireId), { balance: newB });
-                    await utils.addDoc(collections.txs, { type, amount: val, userId: foundUser.id, agentName: agent.name, timestamp: Date.now() });
+                    const userRef = utils.doc(db, 'artifacts', appId, 'public', 'data', 'users', foundUser.fireId);
+                    await utils.updateDoc(userRef, { balance: newB });
+                    
+                    const txsCol = utils.collection(db, 'artifacts', appId, 'public', 'data', 'transactions');
+                    await utils.addDoc(txsCol, { type, amount: val, userId: foundUser.id, agentName: agent.name, timestamp: Date.now() });
+                    
                     playSound(type === 'deposit' ? 'receive' : 'send');
                     setFoundUser({...foundUser, balance: newB}); 
                     setMsg({type:'success', text:'Успешно'}); 
@@ -446,7 +466,7 @@
                                 <button onClick={handleSearch} className="bg-emerald-500 p-4 rounded-xl shadow-lg active:scale-90 flex items-center justify-center">{isSearching ? <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <SvgIcon name="search" className="w-6 h-6"/>}</button>
                             </div>
                         </div>
-                        {msg && <div className={`p-4 rounded-2xl mb-6 w-full max-w-[320px] text-center font-black text-sm animate-enter ${msg.type==='success'?'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20':'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>{msg.text}</div>}
+                        {msg && <div className={`p-4 rounded-2xl mb-6 w-full max-w-[320px] text-center font-black text-sm animate-enter ${msg.type==='success'?'bg-emerald-500/10 text-emerald-400':'bg-rose-500/10 text-rose-400'}`}>{msg.text}</div>}
                         {foundUser && (
                             <div className="bg-white text-slate-900 rounded-[2.5rem] p-8 w-full max-w-[360px] animate-enter shadow-xl relative">
                                 <h3 className="text-2xl font-black mb-1 tracking-tight leading-tight">{foundUser.name}</h3>
@@ -472,16 +492,16 @@
             const h = async () => {
                 if(!f.name || !f.email || !f.password) return;
                 setLoading(true); setError('');
-                const { setDoc, doc, getDocs } = window.amanDB.utils;
+                const { setDoc, doc, getDocs, db, appId, collection } = window.amanDB;
                 try {
-                    const snap = await getDocs(window.amanDB.collections.users);
+                    const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'users'));
                     if (snap.docs.some(d => d.data().email === f.email)) {
                         setError('Email уже занят'); setLoading(false); return;
                     }
                     const id = Math.floor(1000 + Math.random() * 9000).toString();
-                    const ref = doc(window.amanDB.collections.users);
-                    const u = { ...f, id, balance: 0, fireId: ref.id };
-                    await setDoc(ref, u);
+                    const newUserRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'users'));
+                    const u = { ...f, id, balance: 0, fireId: newUserRef.id };
+                    await setDoc(newUserRef, u);
                     onComplete(u);
                 } catch(e) { setError('Ошибка'); setLoading(false); }
             };
@@ -510,10 +530,15 @@
             const h = async () => {
                 if(!f.email || !f.password) return;
                 setLoading(true); setError('');
-                const snap = await window.amanDB.utils.getDocs(window.amanDB.collections.users);
+                const { getDocs, collection, db, appId } = window.amanDB;
+                const usersCol = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+                const snap = await getDocs(usersCol);
                 const found = snap.docs.find(d => d.data().email === f.email && d.data().password === f.password);
-                if(found) onComplete({...found.data(), fireId: found.id});
-                else { setError('Неверные данные'); setLoading(false); }
+                if(found) {
+                    onComplete({...found.data(), fireId: found.id});
+                } else {
+                    setError('Неверные данные'); setLoading(false);
+                }
             };
             return (
                 <div className="min-h-screen p-8 pt-36 max-w-sm mx-auto pb-20">
